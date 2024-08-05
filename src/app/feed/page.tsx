@@ -76,9 +76,9 @@ const LoadingAnimation: React.FC<{ onComplete: () => void }> = ({ onComplete }) 
           onComplete();
           return 100;
         }
-        return prevProgress + 1;
+        return prevProgress + 5;
       });
-    }, 30);
+    }, 15);
 
     return () => clearInterval(interval);
   }, [onComplete]);
