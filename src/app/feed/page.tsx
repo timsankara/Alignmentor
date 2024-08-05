@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { ChevronDown, Filter, Bookmark, Share2, ArrowRight, Sun, Moon } from 'lucide-react';
+import { getFeedItems } from '../utils/feed';
 
 const AIAgendas = [
   "Scalable Oversight",
@@ -124,6 +125,10 @@ const AISafetyFeed = () => {
       setFilteredItems(feedItems.filter(item => item.agenda === selectedAgenda));
     }
   }, [selectedAgenda, feedItems]);
+
+  useEffect(() => {
+    getFeedItems()
+  }, [])
 
   useEffect(() => {
     if (isDarkMode) {
