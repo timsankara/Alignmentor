@@ -1,10 +1,10 @@
 'use client'
 
-import React, { useState, useEffect } from 'react';
-import { ChevronDown, Filter, Bookmark, Share2, ArrowRight, Sun, Moon } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { ChevronDown, Filter, Bookmark, Share2, ArrowRight, Sun, Moon, Bot as Robot, Shield, Brain } from 'lucide-react';
 import { getFeedItems } from '../utils/feed';
 
-const AIAgendas = [
+const AIAgendas: string[] = [
   "Scalable Oversight",
   "AI Alignment",
   "Robustness",
@@ -13,65 +13,8 @@ const AIAgendas = [
   "AI Governance",
 ];
 
-const sampleFeedItems: FeedItem[] = [
-  {
-    id: 1,
-    title: "Advances in Scalable Oversight Techniques",
-    description: "Recent research shows promising results in developing scalable oversight methods for large language models, potentially addressing key AI safety concerns.",
-    agenda: "Scalable Oversight",
-    author: "Dr. Emily Chen",
-    date: "2024-05-15",
-    readTime: "5 min read"
-  },
-  {
-    id: 2,
-    title: "AI Alignment: Bridging the Gap Between Human and Machine Values",
-    description: "A new framework for AI alignment proposes a novel approach to ensure AI systems behave in accordance with human values and intentions.",
-    agenda: "AI Alignment",
-    author: "Prof. David Lee",
-    date: "2024-05-10",
-    readTime: "7 min read"
-  },
-  {
-    id: 3,
-    title: "Enhancing AI Robustness Through Adversarial Training",
-    description: "Researchers demonstrate significant improvements in AI system robustness using advanced adversarial training techniques, marking a step forward in AI safety.",
-    agenda: "Robustness",
-    author: "Dr. Sarah Johnson",
-    date: "2024-05-05",
-    readTime: "6 min read"
-  },
-  {
-    id: 4,
-    title: "Transparency in AI Decision Making: A New Approach",
-    description: "A groundbreaking study introduces a method to make AI decision-making processes more transparent and interpretable, addressing a key challenge in AI safety.",
-    agenda: "Transparency",
-    author: "Prof. Michael Brown",
-    date: "2024-04-30",
-    readTime: "8 min read"
-  },
-  {
-    id: 5,
-    title: "Value Learning: Teaching AI Systems Human Preferences",
-    description: "Recent advancements in value learning algorithms show promise in enabling AI systems to better understand and align with complex human preferences.",
-    agenda: "Value Learning",
-    author: "Dr. Lisa Zhang",
-    date: "2024-04-25",
-    readTime: "5 min read"
-  },
-  {
-    id: 6,
-    title: "The Role of Governance in Ensuring Safe AI Development",
-    description: "A comprehensive report outlines key policy recommendations for governing AI development to ensure safety and ethical considerations are prioritized.",
-    agenda: "AI Governance",
-    author: "Prof. Robert Taylor",
-    date: "2024-04-20",
-    readTime: "9 min read"
-  }
-];
-
 interface FeedItem {
-  id: number;
+  _id: number;
   title: string;
   description: string;
   agenda: string;
@@ -80,7 +23,11 @@ interface FeedItem {
   readTime: string;
 }
 
-const FeedItem: React.FC<{ item: FeedItem }> = ({ item }) => (
+interface FeedItemProps {
+  item: FeedItem;
+}
+
+const FeedItem: React.FC<FeedItemProps> = ({ item }) => (
   <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 ease-in-out transform hover:-translate-y-1 hover:scale-105 space-y-4 overflow-hidden group">
     <div className="flex items-center space-x-2 text-sm font-medium">
       <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full">{item.agenda}</span>
@@ -111,12 +58,77 @@ const FeedItem: React.FC<{ item: FeedItem }> = ({ item }) => (
   </div>
 );
 
-const AISafetyFeed = () => {
-  const [feedItems, setFeedItems] = useState(sampleFeedItems);
-  const [filteredItems, setFilteredItems] = useState(sampleFeedItems);
-  const [selectedAgenda, setSelectedAgenda] = useState('All');
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+const LoadingAnimation: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
+  const [progress, setProgress] = useState(0);
+  const [currentStep, setCurrentStep] = useState(0);
+
+  const steps = [
+    { icon: Robot, text: "Initializing AI systems..." },
+    { icon: Shield, text: "Implementing safety protocols..." },
+    { icon: Brain, text: "Aligning AI objectives..." }
+  ];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setProgress((prevProgress) => {
+        if (prevProgress >= 100) {
+          clearInterval(interval);
+          onComplete();
+          return 100;
+        }
+        return prevProgress + 1;
+      });
+    }, 30);
+
+    return () => clearInterval(interval);
+  }, [onComplete]);
+
+  useEffect(() => {
+    setCurrentStep(Math.min(Math.floor(progress / (100 / steps.length)), steps.length - 1));
+  }, [progress]);
+
+  return (
+    <div className="flex flex-col items-center justify-center h-screen bg- dark:from-gray-800 dark:to-gray-900">
+      <div className="w-64 h-64 relative">
+        <div className="absolute inset-0 rounded-full border-8 border-gray-200 dark:border-gray-700"></div>
+        <div
+          className="absolute inset-0 rounded-full border-8 border-blue-500 dark:border-blue-400 transition-all duration-300 ease-in-out"
+          style={{
+            clipPath: `inset(0 ${100 - progress}% 0 0)`,
+            transform: `rotate(${progress * 3.6}deg)`
+          }}
+        ></div>
+        <div className="absolute inset-4 flex items-center justify-center">
+          {React.createElement(steps[currentStep].icon, {
+            size: 80,
+            className: "text-blue-500 dark:text-blue-400 animate-bounce"
+          })}
+        </div>
+      </div>
+      <h2 className="mt-8 text-2xl font-bold text-white dark:text-white">
+        {steps[currentStep].text}
+      </h2>
+      <p className="mt-4 text-xl font-semibold text-blue-600 dark:text-blue-400">
+        {progress}%
+      </p>
+      <div className="mt-4 w-64 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+        <div
+          className="h-full bg-blue-500 dark:bg-blue-400 transition-all duration-300 ease-in-out"
+          style={{ width: `${progress}%` }}
+        ></div>
+      </div>
+    </div>
+  );
+};
+
+const AISafetyFeed: React.FC = () => {
+  const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
+  const [filteredItems, setFilteredItems] = useState<FeedItem[]>([]);
+  const [selectedAgenda, setSelectedAgenda] = useState<string>('All');
+  const [isFilterOpen, setIsFilterOpen] = useState<boolean>(false);
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isAnimationComplete, setIsAnimationComplete] = useState<boolean>(false);
 
   useEffect(() => {
     if (selectedAgenda === 'All') {
@@ -126,9 +138,38 @@ const AISafetyFeed = () => {
     }
   }, [selectedAgenda, feedItems]);
 
+  const handleAnimationComplete = useCallback(() => {
+    setIsAnimationComplete(true);
+  }, []);
+
   useEffect(() => {
-    getFeedItems()
-  }, [])
+    const fetchData = async () => {
+      try {
+        const data = await getFeedItems();
+        if (Array.isArray(data) && data.every(item =>
+          typeof item === 'object' &&
+          '_id' in item &&
+          'title' in item &&
+          'description' in item &&
+          'agenda' in item &&
+          'author' in item &&
+          'date' in item &&
+          'readTime' in item
+        )) {
+          setFeedItems(data as FeedItem[]);
+        } else {
+          console.error('Received data is not in the expected format:', data);
+          setFeedItems([]);
+        }
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error fetching feed items:', error);
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   useEffect(() => {
     if (isDarkMode) {
@@ -142,9 +183,13 @@ const AISafetyFeed = () => {
     setIsDarkMode(!isDarkMode);
   };
 
+  if (isLoading || !isAnimationComplete) {
+    return <LoadingAnimation onComplete={handleAnimationComplete} />;
+  }
+
   return (
     <div className={`min-h-screen ${isDarkMode ? 'dark' : ''}`}>
-      <div className="max-w mx-auto p-6 space-y-8 transition-colors duration-300 dark:bg-black">
+      <div className="max-w-7xl mx-auto p-6 space-y-8 transition-colors duration-300 dark:bg-gray-900">
         <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
           <h2 className="text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">AI Safety Feed</h2>
           <div className="flex items-center space-x-4">
@@ -188,7 +233,7 @@ const AISafetyFeed = () => {
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {filteredItems.map((item) => (
-            <FeedItem key={item.id} item={item} />
+            <FeedItem key={item._id} item={item} />
           ))}
         </div>
 
