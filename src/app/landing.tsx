@@ -4,9 +4,10 @@
 import React, { useState, useEffect } from 'react';
 import { Sun, Moon, ChevronRight, Rss, GraduationCap, Brain, Zap, Users } from 'lucide-react';
 import Link from 'next/link';
+import Feed from "./feed/page"
 
 const Home = () => {
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(true);
   const [activeFeature, setActiveFeature] = useState(0);
 
   useEffect(() => {
@@ -47,34 +48,34 @@ const Home = () => {
   ];
 
   return (
-    <div className="min-h-screen font-sans bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-white transition-all duration-300">
+    <div className="min-h-screen font-sans bg-gray-900 text-gray-900 dark:bg-gray-900 dark:text-white transition-all duration-300">
       <header className="container mx-auto px-4 py-6 flex justify-between items-center">
         <h1 className="text-2xl font-semibold">AI Safety Feed</h1>
-        <button
+        {/* <button
           onClick={toggleDarkMode}
           className="p-2 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 transition-all duration-300 hover:rotate-12"
           aria-label="Toggle dark mode"
         >
           {darkMode ? <Sun size={24} /> : <Moon size={24} />}
-        </button>
+        </button> */}
       </header>
 
-      <main className="container mx-auto px-4 py-16 space-y-24">
+      <main className="container mx-auto px-4 pt-16 space-y-24">
         <section className="text-center space-y-6">
           <h2 className="text-5xl font-bold leading-tight">
+            {/* <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-green-600">
+              Latest in AI safety
+            </span> */}
+            {/* <br /> */}
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-green-600">
-              Your AI Safety Hub:
-            </span>
-            <br />
-            <span className="text-gray-800 dark:text-white">
-              Stay Informed, Learn, and Grow
+              Learn, and Contribute to AIS
             </span>
           </h2>
-          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto" hidden>
             Discover a powerful dual platform: a curated feed of cutting-edge AI safety content
             and an interactive learning tool to deepen your understanding of this critical field.
           </p>
-          <div className="flex justify-center space-x-4">
+          {/* <div className="flex justify-center space-x-4">
             <Link href="/feed" passHref>
               <button className="px-6 py-3 bg-blue-600 text-white text-lg font-semibold rounded-full hover:bg-blue-700 transition-all duration-300 transform hover:scale-105"
               >
@@ -84,8 +85,10 @@ const Home = () => {
             <button className="px-6 py-3 bg-green-600 text-white text-lg font-semibold rounded-full hover:bg-green-700 transition-all duration-300 transform hover:scale-105">
               Start Learning
             </button>
-          </div>
+          </div> */}
         </section>
+
+        <Feed />
 
         <section className="grid md:grid-cols-2 gap-12">
           {features.map((feature, index) => (
@@ -94,6 +97,7 @@ const Home = () => {
               className={`space-y-4 p-6 rounded-2xl transition-all duration-300 transform hover:scale-105 cursor-pointer ${activeFeature === index ? 'bg-white dark:bg-gray-800 shadow-lg' : ''
                 }`}
               onMouseEnter={() => setActiveFeature(index)}
+              hidden
             >
               <feature.icon size={48} className={`${feature.color}`} />
               <h3 className="text-2xl font-semibold">{feature.title}</h3>
@@ -102,7 +106,7 @@ const Home = () => {
           ))}
         </section>
 
-        <section className="bg-white dark:bg-gray-800 rounded-3xl p-12 shadow-lg transition-all duration-300 hover:shadow-xl">
+        <section className="bg-white dark:bg-gray-800 rounded-3xl p-12 shadow-lg transition-all duration-300 hover:shadow-xl" hidden>
           <h2 className="text-3xl font-semibold mb-8">Join Our Community</h2>
           <p className="text-xl mb-8">
             Whether you're an AI researcher, enthusiast, or just curious about AI safety,
@@ -117,7 +121,7 @@ const Home = () => {
           </a>
         </section>
 
-        <section className="text-center">
+        <section className="text-center" hidden>
           <h2 className="text-4xl font-bold mb-8">What Our Users Say</h2>
           <div className="grid md:grid-cols-2 gap-8">
             {[

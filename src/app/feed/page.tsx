@@ -85,11 +85,23 @@ const LoadingAnimation: React.FC<{ onComplete: () => void }> = ({ onComplete }) 
 
   useEffect(() => {
     setCurrentStep(Math.min(Math.floor(progress / (100 / steps.length)), steps.length - 1));
-  }, [progress]);
+  }, [progress, steps.length]);
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen bg- dark:from-gray-800 dark:to-gray-900">
-      <div className="w-64 h-64 relative">
+    <div className="flex flex-col items-center justify-center h-screen bg-gray-900 dark:from-gray-800 dark:to-gray-900">
+      <h2 className="mt-0 text-2xl font-bold text-white dark:text-white">
+        {steps[currentStep].text}
+      </h2>
+      <p className="mt-0 text-xl font-semibold text-blue-600 dark:text-blue-400">
+        {progress}%
+      </p>
+      <div className="mt-4 w-64 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+        <div
+          className="h-full bg-blue-500 dark:bg-blue-400 transition-all duration-300 ease-in-out"
+          style={{ width: `${progress}%` }}
+        ></div>
+      </div>
+      <div className="w-64 h-64 relative" hidden>
         <div className="absolute inset-0 rounded-full border-8 border-gray-200 dark:border-gray-700"></div>
         <div
           className="absolute inset-0 rounded-full border-8 border-blue-500 dark:border-blue-400 transition-all duration-300 ease-in-out"
@@ -104,18 +116,6 @@ const LoadingAnimation: React.FC<{ onComplete: () => void }> = ({ onComplete }) 
             className: "text-blue-500 dark:text-blue-400 animate-bounce"
           })}
         </div>
-      </div>
-      <h2 className="mt-8 text-2xl font-bold text-white dark:text-white">
-        {steps[currentStep].text}
-      </h2>
-      <p className="mt-4 text-xl font-semibold text-blue-600 dark:text-blue-400">
-        {progress}%
-      </p>
-      <div className="mt-4 w-64 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-        <div
-          className="h-full bg-blue-500 dark:bg-blue-400 transition-all duration-300 ease-in-out"
-          style={{ width: `${progress}%` }}
-        ></div>
       </div>
     </div>
   );
@@ -189,9 +189,9 @@ const AISafetyFeed: React.FC = () => {
 
   return (
     <div className={`min-h-screen ${isDarkMode ? 'dark' : ''}`}>
-      <div className="max-w-7xl mx-auto p-6 space-y-8 transition-colors duration-300 dark:bg-gray-900">
+      <div className="max-w-7xl mx-auto px-6 space-y-8 transition-colors duration-300 dark:bg-gray-900">
         <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-          <h2 className="text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">AI Safety Feed</h2>
+          <h2 className="text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600" hidden>AI Safety Feed</h2>
           <div className="flex items-center space-x-4">
             <div className="relative">
               <button
@@ -222,12 +222,12 @@ const AISafetyFeed: React.FC = () => {
                 </div>
               )}
             </div>
-            <button
+            {/* <button
               onClick={toggleDarkMode}
               className="p-2 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-300"
             >
               {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
-            </button>
+            </button> */}
           </div>
         </div>
 
