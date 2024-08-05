@@ -1,7 +1,9 @@
+/* eslint-disable react/no-unescaped-entities */
 'use client'
 
 import React, { useState, useEffect } from 'react';
 import { Sun, Moon, ChevronRight, Rss, GraduationCap, Brain, Zap, Users } from 'lucide-react';
+import Link from 'next/link';
 
 const Home = () => {
   const [darkMode, setDarkMode] = useState(false);
@@ -73,9 +75,12 @@ const Home = () => {
             and an interactive learning tool to deepen your understanding of this critical field.
           </p>
           <div className="flex justify-center space-x-4">
-            <button className="px-6 py-3 bg-blue-600 text-white text-lg font-semibold rounded-full hover:bg-blue-700 transition-all duration-300 transform hover:scale-105">
-              Explore the Feed
-            </button>
+            <Link href="/feed" passHref>
+              <button className="px-6 py-3 bg-blue-600 text-white text-lg font-semibold rounded-full hover:bg-blue-700 transition-all duration-300 transform hover:scale-105"
+              >
+                Explore the Feed
+              </button>
+            </Link>
             <button className="px-6 py-3 bg-green-600 text-white text-lg font-semibold rounded-full hover:bg-green-700 transition-all duration-300 transform hover:scale-105">
               Start Learning
             </button>
@@ -86,9 +91,8 @@ const Home = () => {
           {features.map((feature, index) => (
             <div
               key={index}
-              className={`space-y-4 p-6 rounded-2xl transition-all duration-300 transform hover:scale-105 cursor-pointer ${
-                activeFeature === index ? 'bg-white dark:bg-gray-800 shadow-lg' : ''
-              }`}
+              className={`space-y-4 p-6 rounded-2xl transition-all duration-300 transform hover:scale-105 cursor-pointer ${activeFeature === index ? 'bg-white dark:bg-gray-800 shadow-lg' : ''
+                }`}
               onMouseEnter={() => setActiveFeature(index)}
             >
               <feature.icon size={48} className={`${feature.color}`} />
