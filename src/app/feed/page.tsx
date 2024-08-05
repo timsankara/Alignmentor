@@ -139,7 +139,7 @@ const AISafetyFeed = () => {
 
   return (
     <div className={`min-h-screen ${isDarkMode ? 'dark' : ''}`}>
-      <div className="max-w-6xl mx-auto p-6 space-y-8 transition-colors duration-300 dark:bg-gray-900">
+      <div className="max-w mx-auto p-6 space-y-8 transition-colors duration-300 dark:bg-black">
         <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
           <h2 className="text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">AI Safety Feed</h2>
           <div className="flex items-center space-x-4">
