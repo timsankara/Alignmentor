@@ -1,8 +1,7 @@
 /* eslint-disable react/no-unescaped-entities */
 'use client'
-
 import React, { useState, useEffect } from 'react';
-import { ChevronRight, ChevronDown, BookOpen, Video, Link as LinkIcon, FileCog, Users, Zap, Search, Moon, Sun, Menu, ChevronLeft } from 'lucide-react';
+import { ChevronRight, ChevronDown, BookOpen, Video, Link as LinkIcon, FileCog, Users, Zap, Search, Moon, Sun, Menu, ChevronLeft, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DynamoDB } from 'aws-sdk';
 
@@ -85,6 +84,7 @@ const AISafetyExplorer: React.FC = () => {
   const [selectedType, setSelectedType] = useState<ItemType | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [fullPaperView, setFullPaperView] = useState(false);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -133,6 +133,12 @@ const AISafetyExplorer: React.FC = () => {
   const handleSelectPaper = (paperId: string) => {
     setSelectedPaperId(paperId);
     if (isMobile) setIsSidebarOpen(false);
+  };
+
+  const handleReadFullPaper = (paperId: string) => {
+    setFullPaperView(true);
+    // Here you would typically navigate to the full paper view
+    // For example: router.push(`/paper/${paperId}`);
   };
 
   const filteredItems = learningItems[selectedArea]?.filter(item =>
@@ -287,25 +293,86 @@ const AISafetyExplorer: React.FC = () => {
     </div>
   );
 
-  const PaperViewer = () => {
-    const paper = learningItems[selectedArea]?.find(item => item.id === selectedPaperId);
+  interface Paper {
+    id: string;
+    title: string;
+    type: string;
+    description: string;
+  }
 
+  // Define the props interface for the PaperViewer component
+  interface PaperViewerProps {
+    paper: Paper | null;
+    onClose: () => void;
+    onReadFull: (id: string) => void;
+  }
+
+  const PaperViewer: React.FC<PaperViewerProps> = ({ paper, onClose, onReadFull }) => {
     if (!paper) return null;
 
     return (
-      <div className="p-8 bg-white dark:bg-gray-900 text-gray-800 dark:text-white min-h-screen overflow-y-auto">
-        <h2 className="text-3xl font-bold mb-4">{paper.title}</h2>
-        <p className="text-lg mb-6">{paper.description}</p>
-        <p className="mb-8">This is where the full content of the paper would be displayed. For demonstration purposes, we're showing a placeholder text.</p>
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => setSelectedPaperId(null)}
-          className="px-6 py-2 bg-purple-600 text-white rounded-full hover:bg-purple-700 transition-colors duration-300"
-        >
-          Back to Learning Items
-        </motion.button>
-      </div>
+      <motion.div
+        initial={{ opacity: 0, y: "100%" }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: "100%" }}
+        transition={{ type: "spring", damping: 25, stiffness: 500 }}
+        className="fixed inset-0 bg-white dark:bg-gray-900 z-50 overflow-y-auto"
+      >
+        <div className="relative min-h-screen flex flex-col">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-4 sm:p-6">
+            <button
+              onClick={onClose}
+              className="absolute top-4 right-4 p-2 rounded-full bg-white/20 text-white hover:bg-white/30 transition-colors"
+            >
+              <X className="w-6 h-6" />
+            </button>
+            <h2 className="text-2xl sm:text-3xl font-bold text-white mt-8 mb-2">{paper.title}</h2>
+            <span className="text-sm font-medium text-purple-200 uppercase">{paper.type}</span>
+          </div>
+
+          {/* Content */}
+          <div className="flex-grow p-4 sm:p-6 overflow-y-auto">
+            <div className="max-w-3xl mx-auto">
+              <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed mb-6">
+                {paper.description}
+              </p>
+
+              <div className="bg-gray-100 dark:bg-gray-800 rounded-xl p-4 mb-6" hidden>
+                <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-3">Key Insights</h3>
+                <ul className="space-y-2 text-gray-700 dark:text-gray-300">
+                  <li className="flex items-center">
+                    <ChevronRight className="w-5 h-5 text-purple-600 dark:text-purple-400 mr-2" />
+                    Groundbreaking approach to AI alignment
+                  </li>
+                  <li className="flex items-center">
+                    <ChevronRight className="w-5 h-5 text-purple-600 dark:text-purple-400 mr-2" />
+                    Novel algorithms for value learning
+                  </li>
+                  <li className="flex items-center">
+                    <ChevronRight className="w-5 h-5 text-purple-600 dark:text-purple-400 mr-2" />
+                    Implications for future AI development
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="p-4 sm:p-6 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={() => onReadFull(paper.id)}
+              className="w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-full font-medium transition-all duration-300 hover:from-purple-700 hover:to-indigo-700 shadow-lg hover:shadow-xl group"
+            >
+              <span className="flex items-center justify-center">
+                Read Full Paper
+                <ChevronRight className="w-5 h-5 ml-2 transition-transform duration-300 group-hover:translate-x-1" />
+              </span>
+            </motion.button>
+          </div>
+        </div>
+      </motion.div>
     );
   };
 
@@ -323,7 +390,15 @@ const AISafetyExplorer: React.FC = () => {
             {isDarkMode ? <Sun className="w-6 h-6 text-yellow-400" /> : <Moon className="w-6 h-6 text-gray-800" />}
           </button>
         </div>
-        {selectedPaperId ? <PaperViewer /> : <LearningItems />}
+        {selectedPaperId && !fullPaperView ? (
+          <PaperViewer
+            paper={learningItems[selectedArea]?.find(item => item.id === selectedPaperId) || null}
+            onClose={() => setSelectedPaperId(null)}
+            onReadFull={handleReadFullPaper}
+          />
+        ) : (
+          <LearningItems />
+        )}
       </div>
     </div>
   );
