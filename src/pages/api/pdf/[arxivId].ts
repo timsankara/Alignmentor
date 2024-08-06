@@ -1,6 +1,6 @@
 // pages/api/pdf/[arxivId].ts
 import { NextApiRequest, NextApiResponse } from 'next';
-import https from 'https';
+import fetch from 'node-fetch';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { arxivId } = req.query;
@@ -11,14 +11,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const pdfUrl = `https://arxiv.org/pdf/${arxivId}`;
 
-  https.get(pdfUrl, (pdfRes) => {
-    // Forward the content type
-    res.setHeader('Content-Type', pdfRes.headers['content-type'] || 'application/pdf');
+  try {
+    const response = await fetch(pdfUrl, { redirect: 'follow' });
 
-    // Stream the PDF data to the client
-    pdfRes.pipe(res);
-  }).on('error', (e) => {
-    console.error(`Error fetching PDF: ${e.message}`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const pdfBuffer = await response.buffer();
+
+    // Set the appropriate headers
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Length', pdfBuffer.length);
+
+    // Send the PDF data
+    res.send(pdfBuffer);
+  } catch (error) {
+    console.error(`Error fetching PDF: ${error.message}`);
     res.status(500).json({ error: 'Failed to fetch PDF' });
-  });
+  }
 }
