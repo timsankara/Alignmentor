@@ -39,6 +39,8 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
     accessKeyId: "AKIA55SBB5ENSF3SCWFI",
     secretAccessKey: "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",
   });
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '';
+
 
   useEffect(() => {
     if (params.resourceId) {
@@ -59,8 +61,12 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
 
       if (result.Item && result.Item.type === 'paper') {
         const arxivId = result.Item.link.split('/').pop();
-        setPdfUrl(`https://arxiv.org/pdf/${arxivId}`);
-        console.log(`https://arxiv.org/pdf/${arxivId}`);
+        // setPdfUrl(`https://arxiv.org/pdf/${arxivId}`);
+        // console.log(`https://arxiv.org/pdf/${arxivId}`);
+        setPdfUrl(`${API_BASE_URL}/api/pdf/${arxivId}`);
+        console.log(`PDF URL: ${API_BASE_URL}/api/pdf/${arxivId}`);
+        // setPdfUrl(`/api/pdf/${arxivId}`);
+        // console.log(`PDF URL: /api/pdf/${arxivId}`);
         setDiscussions(result.Item.discussions || []);
       } else {
         console.error('Item not found or not a paper');
@@ -102,7 +108,7 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
   return (
     <div className="flex h-screen bg-gray-50">
       <div className="w-3/5 p-8 overflow-auto">
-      {/* I set this @dist manually to align with what was installed */}
+        {/* I set this @dist manually to align with what was installed */}
         <PDFWorker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
           <div style={{ height: 'calc(100vh - 4rem)' }}>
             <PDFViewer fileUrl={pdfUrl} />

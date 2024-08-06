@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:remote-api": "NEXT_PUBLIC_API_BASE_URL=https://ai-safety-feed.vercel.app next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
