@@ -24,7 +24,7 @@ interface LearningItem {
   area: string;
 }
 
-const truncateText = (text, maxLength) => {
+const truncateText = (text: string, maxLength: number): string => {
   if (text.length <= maxLength) return text;
   return text.substr(0, maxLength) + '...';
 };
