@@ -27,7 +27,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Send the PDF data
     res.send(pdfBuffer);
   } catch (error) {
-    console.error(`Error fetching PDF: ${error.message}`);
-    res.status(500).json({ error: 'Failed to fetch PDF' });
+    console.error('Error fetching PDF:', error);
+
+    let errorMessage = 'An unexpected error occurred';
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+
+    res.status(500).json({ error: `Failed to fetch PDF: ${errorMessage}` });
   }
 }
