@@ -18,10 +18,6 @@ const config: Config = {
         sans: ['SF Pro Display', 'Helvetica', 'Arial', 'sans-serif'],
       },
       colors: {
-        blue: {
-          600: '#2563eb',
-          700: '#1d4ed8',
-        },
         purple: {
           600: '#9333ea',
           700: '#7e22ce',
@@ -33,6 +29,22 @@ const config: Config = {
         green: {
           600: '#16a34a',
           400: '#4ade80',
+        },
+        navy: {
+          900: '#0A192F',
+          800: '#112240',
+          700: '#1E3A5F',
+          600: '#2A4A73',
+        },
+        blue: {
+          900: '#1E3A8A',
+          800: '#1E40AF',
+          700: '#1D4ED8',
+          600: '#2563EB',
+          400: '#60A5FA',
+          300: '#93C5FD',
+          200: '#BFDBFE',
+          100: '#DBEAFE',
         },
       },
     },

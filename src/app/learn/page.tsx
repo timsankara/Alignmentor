@@ -1,10 +1,37 @@
+/* eslint-disable react/no-unescaped-entities */
 'use client'
 
 import React, { useState, useEffect } from 'react';
 import { ChevronRight, ChevronDown, BookOpen, Video, Link as LinkIcon, FileCog, Users, Zap, Search, Moon, Sun, Menu, ChevronLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const AI_SAFETY_AREAS = [
+type ItemType = 'paper' | 'video' | 'course' | 'tool' | 'community' | 'challenge';
+
+interface LearningItem {
+  id: string;
+  title: string;
+  type: ItemType;
+  description: string;
+  link: string;
+  image: string;
+}
+
+type AreaKey =
+  | "Reinforcement Learning from Human (or AI) Feedback"
+  | "Scalable Oversight"
+  | "Robustness, Unlearning and Control"
+  | "Mechanistic Interpretability"
+  | "Technical Governance Approaches"
+  | "AI Alignment Theory"
+  | "Value Learning and Specification"
+  | "AI Containment and Cybersecurity"
+  | "Cooperative AI and Multi-Agent Systems";
+
+type MockLearningItems = {
+  [key in AreaKey]: LearningItem[];
+};
+
+const AI_SAFETY_AREAS: AreaKey[] = [
   "Reinforcement Learning from Human (or AI) Feedback",
   "Scalable Oversight",
   "Robustness, Unlearning and Control",
@@ -13,10 +40,10 @@ const AI_SAFETY_AREAS = [
   "AI Alignment Theory",
   "Value Learning and Specification",
   "AI Containment and Cybersecurity",
-  "Cooperative AI and Multi-Agent Systems",
+  "Cooperative AI and Multi-Agent Systems"
 ];
 
-const MOCK_LEARNING_ITEMS = {
+const MOCK_LEARNING_ITEMS: MockLearningItems = {
   "Reinforcement Learning from Human (or AI) Feedback": [
     { id: '1', title: "Deep RL from Human Preferences", type: 'paper', description: "Seminal paper on learning from human feedback", link: "#", image: "/api/placeholder/400/250" },
     { id: '2', title: "Introduction to RLHF", type: 'video', description: "Comprehensive video tutorial on RLHF", link: "#", image: "/api/placeholder/400/250" },
@@ -30,10 +57,33 @@ const MOCK_LEARNING_ITEMS = {
     { id: '6', title: "Adversarial Training Methods", type: 'paper', description: "Techniques for improving AI robustness", link: "#", image: "/api/placeholder/400/250" },
     { id: '7', title: "Machine Unlearning", type: 'course', description: "Methods for selective forgetting in AI systems", link: "#", image: "/api/placeholder/400/250" },
   ],
-  // Add more areas and items as needed
+  "Mechanistic Interpretability": [
+    { id: '8', title: "Circuits in Neural Networks", type: 'paper', description: "Understanding neural network internals", link: "#", image: "/api/placeholder/400/250" },
+    { id: '9', title: "Visualizing AI Decision Making", type: 'tool', description: "Interactive tool for AI interpretability", link: "#", image: "/api/placeholder/400/250" },
+  ],
+  "Technical Governance Approaches": [
+    { id: '10', title: "AI Governance Frameworks", type: 'course', description: "Overview of technical approaches to AI governance", link: "#", image: "/api/placeholder/400/250" },
+    { id: '11', title: "Regulatory Sandboxes for AI", type: 'paper', description: "Exploring safe testing environments for AI systems", link: "#", image: "/api/placeholder/400/250" },
+  ],
+  "AI Alignment Theory": [
+    { id: '12', title: "Foundational Principles of AI Alignment", type: 'video', description: "Introduction to key concepts in AI alignment", link: "#", image: "/api/placeholder/400/250" },
+    { id: '13', title: "Coherent Extrapolated Volition", type: 'paper', description: "Exploring Yudkowsky's concept for AI alignment", link: "#", image: "/api/placeholder/400/250" },
+  ],
+  "Value Learning and Specification": [
+    { id: '14', title: "Inverse Reinforcement Learning", type: 'course', description: "Learning human values from demonstrations", link: "#", image: "/api/placeholder/400/250" },
+    { id: '15', title: "Value Specification Techniques", type: 'paper', description: "Methods for precisely defining human values", link: "#", image: "/api/placeholder/400/250" },
+  ],
+  "AI Containment and Cybersecurity": [
+    { id: '16', title: "AI Boxing Strategies", type: 'video', description: "Techniques for containing potentially dangerous AI", link: "#", image: "/api/placeholder/400/250" },
+    { id: '17', title: "Cybersecurity for AI Systems", type: 'course', description: "Protecting AI systems from external threats", link: "#", image: "/api/placeholder/400/250" },
+  ],
+  "Cooperative AI and Multi-Agent Systems": [
+    { id: '18', title: "Game Theory for AI Cooperation", type: 'paper', description: "Applying game theory to multi-agent AI systems", link: "#", image: "/api/placeholder/400/250" },
+    { id: '19', title: "Cooperative AI Challenge", type: 'challenge', description: "Competition for developing cooperative AI agents", link: "#", image: "/api/placeholder/400/250" },
+  ],
 };
 
-const iconMap = {
+const iconMap: Record<ItemType, React.ElementType> = {
   paper: BookOpen,
   video: Video,
   course: LinkIcon,
@@ -42,15 +92,27 @@ const iconMap = {
   challenge: Zap,
 };
 
+const gradientColors: Record<ItemType, string> = {
+  paper: 'from-blue-400 to-blue-600',
+  video: 'from-red-400 to-red-600',
+  course: 'from-green-400 to-green-600',
+  tool: 'from-yellow-400 to-yellow-600',
+  community: 'from-purple-400 to-purple-600',
+  challenge: 'from-orange-400 to-orange-600',
+};
+
+const getGradientColor = (type: ItemType): string => {
+  return gradientColors[type] || 'from-gray-400 to-gray-600';
+};
+
 const AISafetyExplorer: React.FC = () => {
-  const [selectedArea, setSelectedArea] = useState(AI_SAFETY_AREAS[0]);
+  const [selectedArea, setSelectedArea] = useState<AreaKey>(AI_SAFETY_AREAS[0]);
   const [selectedPaperId, setSelectedPaperId] = useState<string | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedType, setSelectedType] = useState<string | null>(null);
-  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+  const [selectedType, setSelectedType] = useState<ItemType | null>(null);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -66,7 +128,7 @@ const AISafetyExplorer: React.FC = () => {
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
-  const handleSelectArea = (area: string) => {
+  const handleSelectArea = (area: AreaKey) => {
     setSelectedArea(area);
     setSelectedPaperId(null);
     if (isMobile) setIsSidebarOpen(false);
@@ -141,14 +203,13 @@ const AISafetyExplorer: React.FC = () => {
           {Object.keys(iconMap).map(type => (
             <motion.button
               key={type}
-              onClick={() => setSelectedType(selectedType === type ? null : type)}
+              onClick={() => setSelectedType(selectedType === type as ItemType ? null : type as ItemType)}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className={`px-3 py-1 rounded-full text-sm font-medium transition-colors duration-300 ${
-                selectedType === type
-                  ? 'bg-purple-600 text-white'
-                  : 'bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'
-              }`}
+              className={`px-3 py-1 rounded-full text-sm font-medium transition-colors duration-300 ${selectedType === type
+                ? 'bg-purple-600 text-white'
+                : 'bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'
+                }`}
             >
               {type}
             </motion.button>
@@ -162,54 +223,56 @@ const AISafetyExplorer: React.FC = () => {
           initial="hidden"
           animate="visible"
           variants={{
-            visible: { transition: { staggerChildren: 0.1 } }
+            visible: { transition: { staggerChildren: 0.05 } }
           }}
         >
-          {filteredItems.map((item) => {
-            const Icon = iconMap[item.type as keyof typeof iconMap];
+          {filteredItems.map((item: LearningItem) => {
+            const Icon = iconMap[item.type];
+            const gradientColor = getGradientColor(item.type);
             return (
               <motion.div
                 key={item.id}
                 layout
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                whileHover={{ scale: 1.03 }}
-                onHoverStart={() => setHoveredItem(item.id)}
-                onHoverEnd={() => setHoveredItem(null)}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 20 }}
+                transition={{ duration: 0.3 }}
                 className="bg-white dark:bg-gray-900 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300"
               >
-                <div className="relative">
-                  <img src={item.image} alt={item.title} className="w-full h-48 object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                  <div className="absolute bottom-4 left-4 right-4">
-                    <h2 className="text-xl font-semibold text-white mb-2">{item.title}</h2>
-                    <span className="text-sm font-medium text-purple-300 uppercase">{item.type}</span>
+                <motion.div
+                  whileHover={{ scale: 1.03 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 10 }}
+                >
+                  <div className={`relative h-48 bg-gradient-to-br ${gradientColor}`}>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <Icon className="w-24 h-24 text-white opacity-30" />
+                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                    <div className="absolute bottom-4 left-4 right-4">
+                      <h2 className="text-xl font-semibold text-white mb-2">{item.title}</h2>
+                      <span className="text-sm font-medium text-purple-300 uppercase">{item.type}</span>
+                    </div>
                   </div>
-                </div>
-                <div className="p-6">
-                  <p className="text-gray-600 dark:text-gray-300 mb-4">{item.description}</p>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => item.type === 'paper' ? handleSelectPaper(item.id) : window.open(item.link, '_blank')}
-                    className="w-full px-4 py-2 bg-purple-600 dark:bg-purple-500 text-white rounded-full transition-all duration-300 hover:bg-purple-700 dark:hover:bg-purple-600"
-                  >
-                    {item.type === 'paper' ? 'Read Paper' : 'Explore'}
-                  </motion.button>
-                </div>
-                <AnimatePresence>
-                  {hoveredItem === item.id && (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.8 }}
-                      className="absolute top-2 right-2 w-10 h-10 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center shadow-lg"
+                  <div className="p-6">
+                    <p className="text-gray-600 dark:text-gray-300 mb-4">{item.description}</p>
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => item.type === 'paper' ? handleSelectPaper(item.id) : window.open(item.link, '_blank')}
+                      className="w-full px-4 py-2 bg-purple-600 dark:bg-purple-500 text-white rounded-full transition-all duration-300 hover:bg-purple-700 dark:hover:bg-purple-600"
                     >
-                      <Icon className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                      {item.type === 'paper' ? 'Read Paper' : 'Explore'}
+                    </motion.button>
+                  </div>
+                </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  whileHover={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.2 }}
+                  className="absolute top-2 right-2 w-10 h-10 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center shadow-lg"
+                >
+                  <Icon className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                </motion.div>
               </motion.div>
             );
           })}
@@ -217,6 +280,28 @@ const AISafetyExplorer: React.FC = () => {
       </AnimatePresence>
     </div>
   );
+
+  const PaperViewer = () => {
+    const paper = MOCK_LEARNING_ITEMS[selectedArea].find(item => item.id === selectedPaperId);
+
+    if (!paper) return null;
+
+    return (
+      <div className="p-8 bg-white dark:bg-gray-900 text-gray-800 dark:text-white min-h-screen overflow-y-auto">
+        <h2 className="text-3xl font-bold mb-4">{paper.title}</h2>
+        <p className="text-lg mb-6">{paper.description}</p>
+        <p className="mb-8">This is where the full content of the paper would be displayed. For demonstration purposes, we're showing a placeholder text.</p>
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => setSelectedPaperId(null)}
+          className="px-6 py-2 bg-purple-600 text-white rounded-full hover:bg-purple-700 transition-colors duration-300"
+        >
+          Back to Learning Items
+        </motion.button>
+      </div>
+    );
+  };
 
   return (
     <div className={`flex h-screen ${isDarkMode ? 'dark' : ''}`}>
@@ -232,22 +317,7 @@ const AISafetyExplorer: React.FC = () => {
             {isDarkMode ? <Sun className="w-6 h-6 text-yellow-400" /> : <Moon className="w-6 h-6 text-gray-800" />}
           </button>
         </div>
-        {selectedPaperId ? (
-          <div className="p-8 bg-white dark:bg-gray-900 text-gray-800 dark:text-white">
-            <h2 className="text-2xl font-bold mb-4">Paper Viewer</h2>
-            <p>Viewing paper with ID: {selectedPaperId}</p>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setSelectedPaperId(null)}
-              className="mt-4 px-6 py-2 bg-purple-600 text-white rounded-full hover:bg-purple-700 transition-colors duration-300"
-            >
-              Back to Learning Items
-            </motion.button>
-          </div>
-        ) : (
-          <LearningItems />
-        )}
+        {selectedPaperId ? <PaperViewer /> : <LearningItems />}
       </div>
     </div>
   );
