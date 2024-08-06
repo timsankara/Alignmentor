@@ -4,6 +4,14 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronRight, ChevronDown, BookOpen, Video, Link as LinkIcon, FileCog, Users, Zap, Search, Moon, Sun, Menu, ChevronLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { DynamoDB } from 'aws-sdk';
+
+// Initialize DynamoDB client
+const dynamoDB = new DynamoDB.DocumentClient({
+  region: "us-east-1",
+  accessKeyId: "AKIA55SBB5ENSF3SCWFI",
+  secretAccessKey: "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",
+});
 
 type ItemType = 'paper' | 'video' | 'course' | 'tool' | 'community' | 'challenge';
 
@@ -13,7 +21,7 @@ interface LearningItem {
   type: ItemType;
   description: string;
   link: string;
-  image: string;
+  area: string;
 }
 
 type AreaKey =
@@ -27,10 +35,6 @@ type AreaKey =
   | "AI Containment and Cybersecurity"
   | "Cooperative AI and Multi-Agent Systems";
 
-type MockLearningItems = {
-  [key in AreaKey]: LearningItem[];
-};
-
 const AI_SAFETY_AREAS: AreaKey[] = [
   "Reinforcement Learning from Human (or AI) Feedback",
   "Scalable Oversight",
@@ -42,46 +46,6 @@ const AI_SAFETY_AREAS: AreaKey[] = [
   "AI Containment and Cybersecurity",
   "Cooperative AI and Multi-Agent Systems"
 ];
-
-const MOCK_LEARNING_ITEMS: MockLearningItems = {
-  "Reinforcement Learning from Human (or AI) Feedback": [
-    { id: '1', title: "Deep RL from Human Preferences", type: 'paper', description: "Seminal paper on learning from human feedback", link: "#", image: "/api/placeholder/400/250" },
-    { id: '2', title: "Introduction to RLHF", type: 'video', description: "Comprehensive video tutorial on RLHF", link: "#", image: "/api/placeholder/400/250" },
-    { id: '3', title: "RLHF in Practice", type: 'course', description: "Hands-on course for implementing RLHF", link: "#", image: "/api/placeholder/400/250" },
-  ],
-  "Scalable Oversight": [
-    { id: '4', title: "Recursive Reward Modeling", type: 'paper', description: "Framework for scalable AI oversight", link: "#", image: "/api/placeholder/400/250" },
-    { id: '5', title: "Debate as an AI Safety Technique", type: 'video', description: "Exploring debate for AI alignment", link: "#", image: "/api/placeholder/400/250" },
-  ],
-  "Robustness, Unlearning and Control": [
-    { id: '6', title: "Adversarial Training Methods", type: 'paper', description: "Techniques for improving AI robustness", link: "#", image: "/api/placeholder/400/250" },
-    { id: '7', title: "Machine Unlearning", type: 'course', description: "Methods for selective forgetting in AI systems", link: "#", image: "/api/placeholder/400/250" },
-  ],
-  "Mechanistic Interpretability": [
-    { id: '8', title: "Circuits in Neural Networks", type: 'paper', description: "Understanding neural network internals", link: "#", image: "/api/placeholder/400/250" },
-    { id: '9', title: "Visualizing AI Decision Making", type: 'tool', description: "Interactive tool for AI interpretability", link: "#", image: "/api/placeholder/400/250" },
-  ],
-  "Technical Governance Approaches": [
-    { id: '10', title: "AI Governance Frameworks", type: 'course', description: "Overview of technical approaches to AI governance", link: "#", image: "/api/placeholder/400/250" },
-    { id: '11', title: "Regulatory Sandboxes for AI", type: 'paper', description: "Exploring safe testing environments for AI systems", link: "#", image: "/api/placeholder/400/250" },
-  ],
-  "AI Alignment Theory": [
-    { id: '12', title: "Foundational Principles of AI Alignment", type: 'video', description: "Introduction to key concepts in AI alignment", link: "#", image: "/api/placeholder/400/250" },
-    { id: '13', title: "Coherent Extrapolated Volition", type: 'paper', description: "Exploring Yudkowsky's concept for AI alignment", link: "#", image: "/api/placeholder/400/250" },
-  ],
-  "Value Learning and Specification": [
-    { id: '14', title: "Inverse Reinforcement Learning", type: 'course', description: "Learning human values from demonstrations", link: "#", image: "/api/placeholder/400/250" },
-    { id: '15', title: "Value Specification Techniques", type: 'paper', description: "Methods for precisely defining human values", link: "#", image: "/api/placeholder/400/250" },
-  ],
-  "AI Containment and Cybersecurity": [
-    { id: '16', title: "AI Boxing Strategies", type: 'video', description: "Techniques for containing potentially dangerous AI", link: "#", image: "/api/placeholder/400/250" },
-    { id: '17', title: "Cybersecurity for AI Systems", type: 'course', description: "Protecting AI systems from external threats", link: "#", image: "/api/placeholder/400/250" },
-  ],
-  "Cooperative AI and Multi-Agent Systems": [
-    { id: '18', title: "Game Theory for AI Cooperation", type: 'paper', description: "Applying game theory to multi-agent AI systems", link: "#", image: "/api/placeholder/400/250" },
-    { id: '19', title: "Cooperative AI Challenge", type: 'challenge', description: "Competition for developing cooperative AI agents", link: "#", image: "/api/placeholder/400/250" },
-  ],
-};
 
 const iconMap: Record<ItemType, React.ElementType> = {
   paper: BookOpen,
@@ -106,6 +70,7 @@ const getGradientColor = (type: ItemType): string => {
 };
 
 const AISafetyExplorer: React.FC = () => {
+  const [learningItems, setLearningItems] = useState<{ [key in AreaKey]: LearningItem[] }>({} as { [key in AreaKey]: LearningItem[] });
   const [selectedArea, setSelectedArea] = useState<AreaKey>(AI_SAFETY_AREAS[0]);
   const [selectedPaperId, setSelectedPaperId] = useState<string | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -113,13 +78,39 @@ const AISafetyExplorer: React.FC = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState<ItemType | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
     window.addEventListener('resize', checkMobile);
+    fetchLearningItems();
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  const fetchLearningItems = async () => {
+    setIsLoading(true);
+    try {
+      const params = {
+        TableName: 'AISafetyContent',
+      };
+      const result = await dynamoDB.scan(params).promise();
+      const items = result.Items as LearningItem[];
+      const groupedItems = items.reduce((acc, item) => {
+        if (!acc[item.area as AreaKey]) {
+          acc[item.area as AreaKey] = [];
+        }
+        acc[item.area as AreaKey].push(item);
+        return acc;
+      }, {} as { [key in AreaKey]: LearningItem[] });
+      setLearningItems(groupedItems);
+    } catch (err) {
+      console.error('Failed to fetch items:', err);
+      setError('Failed to fetch learning items. Please try again later.');
+    }
+    setIsLoading(false);
+  };
 
   const toggleTheme = () => {
     setIsDarkMode(!isDarkMode);
@@ -139,7 +130,7 @@ const AISafetyExplorer: React.FC = () => {
     if (isMobile) setIsSidebarOpen(false);
   };
 
-  const filteredItems = MOCK_LEARNING_ITEMS[selectedArea]?.filter(item =>
+  const filteredItems = learningItems[selectedArea]?.filter(item =>
     item.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
     (!selectedType || item.type === selectedType)
   ) || [];
@@ -217,72 +208,80 @@ const AISafetyExplorer: React.FC = () => {
         </div>
       </div>
 
-      <AnimatePresence>
-        <motion.div
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
-          initial="hidden"
-          animate="visible"
-          variants={{
-            visible: { transition: { staggerChildren: 0.05 } }
-          }}
-        >
-          {filteredItems.map((item: LearningItem) => {
-            const Icon = iconMap[item.type];
-            const gradientColor = getGradientColor(item.type);
-            return (
-              <motion.div
-                key={item.id}
-                layout
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 20 }}
-                transition={{ duration: 0.3 }}
-                className="bg-white dark:bg-gray-900 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300"
-              >
+      {isLoading ? (
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-500"></div>
+        </div>
+      ) : error ? (
+        <div className="text-red-500 text-center">{error}</div>
+      ) : (
+        <AnimatePresence>
+          <motion.div
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+            initial="hidden"
+            animate="visible"
+            variants={{
+              visible: { transition: { staggerChildren: 0.05 } }
+            }}
+          >
+            {filteredItems.map((item: LearningItem) => {
+              const Icon = iconMap[item.type];
+              const gradientColor = getGradientColor(item.type);
+              return (
                 <motion.div
-                  whileHover={{ scale: 1.03 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 10 }}
+                  key={item.id}
+                  layout
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 20 }}
+                  transition={{ duration: 0.3 }}
+                  className="bg-white dark:bg-gray-900 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300"
                 >
-                  <div className={`relative h-48 bg-gradient-to-br ${gradientColor}`}>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <Icon className="w-24 h-24 text-white opacity-30" />
+                  <motion.div
+                    whileHover={{ scale: 1.03 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 10 }}
+                  >
+                    <div className={`relative h-48 bg-gradient-to-br ${gradientColor}`}>
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <Icon className="w-24 h-24 text-white opacity-30" />
+                      </div>
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                      <div className="absolute bottom-4 left-4 right-4">
+                        <h2 className="text-xl font-semibold text-white mb-2">{item.title}</h2>
+                        <span className="text-sm font-medium text-purple-300 uppercase">{item.type}</span>
+                      </div>
                     </div>
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                    <div className="absolute bottom-4 left-4 right-4">
-                      <h2 className="text-xl font-semibold text-white mb-2">{item.title}</h2>
-                      <span className="text-sm font-medium text-purple-300 uppercase">{item.type}</span>
+                    <div className="p-6">
+                      <p className="text-gray-600 dark:text-gray-300 mb-4">{item.description}</p>
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => item.type === 'paper' ? handleSelectPaper(item.id) : window.open(item.link, '_blank')}
+                        className="w-full px-4 py-2 bg-purple-600 dark:bg-purple-500 text-white rounded-full transition-all duration-300 hover:bg-purple-700 dark:hover:bg-purple-600"
+                      >
+                        {item.type === 'paper' ? 'Read Paper' : 'Explore'}
+                      </motion.button>
                     </div>
-                  </div>
-                  <div className="p-6">
-                    <p className="text-gray-600 dark:text-gray-300 mb-4">{item.description}</p>
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => item.type === 'paper' ? handleSelectPaper(item.id) : window.open(item.link, '_blank')}
-                      className="w-full px-4 py-2 bg-purple-600 dark:bg-purple-500 text-white rounded-full transition-all duration-300 hover:bg-purple-700 dark:hover:bg-purple-600"
-                    >
-                      {item.type === 'paper' ? 'Read Paper' : 'Explore'}
-                    </motion.button>
-                  </div>
+                  </motion.div>
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    whileHover={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute top-2 right-2 w-10 h-10 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center shadow-lg"
+                  >
+                    <Icon className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                  </motion.div>
                 </motion.div>
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  whileHover={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.2 }}
-                  className="absolute top-2 right-2 w-10 h-10 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center shadow-lg"
-                >
-                  <Icon className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-                </motion.div>
-              </motion.div>
-            );
-          })}
-        </motion.div>
-      </AnimatePresence>
+              );
+            })}
+          </motion.div>
+        </AnimatePresence>
+      )}
     </div>
   );
 
   const PaperViewer = () => {
-    const paper = MOCK_LEARNING_ITEMS[selectedArea].find(item => item.id === selectedPaperId);
+    const paper = learningItems[selectedArea]?.find(item => item.id === selectedPaperId);
 
     if (!paper) return null;
 
