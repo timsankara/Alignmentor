@@ -24,6 +24,11 @@ interface LearningItem {
   area: string;
 }
 
+const truncateText = (text, maxLength) => {
+  if (text.length <= maxLength) return text;
+  return text.substr(0, maxLength) + '...';
+};
+
 type AreaKey =
   | "Reinforcement Learning from Human (or AI) Feedback"
   | "Scalable Oversight"
@@ -252,14 +257,16 @@ const AISafetyExplorer: React.FC = () => {
                       </div>
                     </div>
                     <div className="p-6">
-                      <p className="text-gray-600 dark:text-gray-300 mb-4">{item.description}</p>
+                      <p className="text-gray-600 dark:text-gray-300 mb-4">
+                        {truncateText(item.description, 100)}
+                      </p>
                       <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={() => item.type === 'paper' ? handleSelectPaper(item.id) : window.open(item.link, '_blank')}
                         className="w-full px-4 py-2 bg-purple-600 dark:bg-purple-500 text-white rounded-full transition-all duration-300 hover:bg-purple-700 dark:hover:bg-purple-600"
                       >
-                        {item.type === 'paper' ? 'Read Paper' : 'Explore'}
+                        {item.type === 'paper' ? 'Preview Paper' : 'Explore'}
                       </motion.button>
                     </div>
                   </motion.div>
