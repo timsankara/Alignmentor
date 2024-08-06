@@ -137,6 +137,8 @@ const AISafetyExplorer: React.FC = () => {
 
   const handleReadFullPaper = (paperId: string) => {
     setFullPaperView(true);
+    // open a new tab with the full paper view
+    window.open(`/explorer/${paperId}`, '_blank');
     // Here you would typically navigate to the full paper view
     // For example: router.push(`/paper/${paperId}`);
   };
@@ -154,7 +156,7 @@ const AISafetyExplorer: React.FC = () => {
     >
       <div className="p-6">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-semibold">AI Safety Research</h2>
+          <h2 className="text-2xl font-semibold">AI Safety Study Buddy</h2>
           {isMobile && (
             <button onClick={toggleSidebar} className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-800">
               <ChevronLeft className="w-6 h-6" />
