@@ -8,7 +8,7 @@ AWS.config.update({
 });
 
 const dynamodb = new AWS.DynamoDB.DocumentClient();
-let tableName = 'aisafety_feed_items';
+let tableName = 'AISafetyContent';
 
 async function getFeedItems() {
   console.log("getFeedItems");
