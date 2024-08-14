@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Sun, Moon, Plus, Clock, User, BookOpen, Tag } from 'lucide-react';
+import { createFeedItem } from '../utils/feed';
+import { v4 as uuid } from 'uuid'
 
 const AIAgendas = [
   "Scalable Oversight",
@@ -14,34 +16,37 @@ const AIAgendas = [
 ];
 
 interface FeedItem {
-  _id: string;
+  id: string;
   title: string;
   description: string;
   agenda: string;
   author: string;
   date: string;
   readTime: string;
+  link: string,
 }
 
 interface DynamoDBItem {
-  _id: { S: string };
   title: { S: string };
   description: { S: string };
   agenda: { S: string };
   author: { S: string };
   date: { S: string };
   readTime: { S: string };
+  link: { S: string };
+  id: { S: string };
 }
 
 function convertDynamoDBItemToFeedItem(item: DynamoDBItem): FeedItem {
   return {
-    _id: item._id.S,
     title: item.title.S,
     description: item.description.S,
     agenda: item.agenda.S,
     author: item.author.S,
     date: item.date.S,
     readTime: item.readTime.S,
+    link: item.link.S,
+    id: item.id.S
   };
 }
 
@@ -51,20 +56,21 @@ async function getFeedItems(): Promise<DynamoDBItem[]> {
   return [];
 }
 
-async function createFeedItem(feedItem: FeedItem) {
-  const params = {
-    TableName: 'your-dynamodb-table-name',
-    Item: feedItem,
-  };
-  try {
-    // Implement your DynamoDB put operation here
-    console.log('Feed item created successfully', params);
-    return feedItem;
-  } catch (error) {
-    console.error('Error creating feed item in DynamoDB:', error);
-    throw error;
-  }
-}
+// async function createFeedItem(feedItem: FeedItem) {
+//   const params = {
+//     TableName: 'AISafetyContent',
+//     Item: feedItem,
+//   };
+//   try {
+//     // Implement your DynamoDB put operation here
+
+//     console.log('Feed item created successfully', params);
+//     return feedItem;
+//   } catch (error) {
+//     console.error('Error creating feed item in DynamoDB:', error);
+//     throw error;
+//   }
+// }
 
 const AIAgendaDashboard: React.FC = () => {
   const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
@@ -74,6 +80,8 @@ const AIAgendaDashboard: React.FC = () => {
     agenda: '',
     author: '',
     readTime: '',
+    link: '',
+    id: ''
   });
   const [darkMode, setDarkMode] = useState(false);
 
@@ -105,7 +113,7 @@ const AIAgendaDashboard: React.FC = () => {
     e.preventDefault();
     const item: FeedItem = {
       ...newItem,
-      _id: uuidv4(),
+      id: uuidv4(),
       date: new Date().toISOString().split('T')[0],
     };
     try {
@@ -117,17 +125,18 @@ const AIAgendaDashboard: React.FC = () => {
         agenda: '',
         author: '',
         readTime: '',
+        link: '',
+        id: ''
       });
     } catch (error) {
       console.error('Failed to create feed item:', error);
     }
   };
 
-  const inputClass = `block w-full rounded-md shadow-sm sm:text-sm ${
-    darkMode
-      ? 'bg-gray-700 text-white border-gray-600 focus:ring-blue-500 focus:border-blue-500'
-      : 'border-gray-300 focus:ring-indigo-500 focus:border-indigo-500'
-  } h-10 px-3`;
+  const inputClass = `block w-full rounded-md shadow-sm sm:text-sm ${darkMode
+    ? 'bg-gray-700 text-white border-gray-600 focus:ring-blue-500 focus:border-blue-500'
+    : 'border-gray-300 focus:ring-indigo-500 focus:border-indigo-500'
+    } h-10 px-3`;
 
   return (
     <div className={`min-h-screen ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'}`}>
@@ -179,6 +188,18 @@ const AIAgendaDashboard: React.FC = () => {
                   onChange={handleInputChange}
                   required
                   className={`${inputClass} h-auto`}
+                />
+              </div>
+              <div>
+                <label htmlFor="title" className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Link</label>
+                <input
+                  type="text"
+                  name="link"
+                  id="link"
+                  value={newItem.link}
+                  onChange={handleInputChange}
+                  required
+                  className={inputClass}
                 />
               </div>
               <div>
@@ -252,7 +273,7 @@ const AIAgendaDashboard: React.FC = () => {
               Recent Feed Items
             </h2>
             {feedItems.map((item) => (
-              <div key={item._id} className={`${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-sm rounded-lg overflow-hidden transition-all duration-300 hover:shadow-md`}>
+              <div key={item.id} className={`${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-sm rounded-lg overflow-hidden transition-all duration-300 hover:shadow-md`}>
                 <div className="px-6 py-4">
                   <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'} mb-2`}>{item.title}</h3>
                   <p className={`${darkMode ? 'text-gray-300' : 'text-gray-600'} mb-4`}>{item.description}</p>
