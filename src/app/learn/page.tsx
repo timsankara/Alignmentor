@@ -20,7 +20,8 @@ interface LearningItem {
   type: ItemType;
   description: string;
   link: string;
-  area: string;
+  agenda: string;
+  // area: string
 }
 
 const truncateText = (text: string, maxLength: number): string => {
@@ -102,14 +103,17 @@ const AISafetyExplorer: React.FC = () => {
       };
       const result = await dynamoDB.scan(params).promise();
       const items = result.Items as LearningItem[];
+      // console.log(items);
       const groupedItems = items.reduce((acc, item) => {
-        if (!acc[item.area as AreaKey]) {
-          acc[item.area as AreaKey] = [];
+        if (!acc[item.agenda as AreaKey]) {
+          acc[item.agenda as AreaKey] = [];
         }
-        acc[item.area as AreaKey].push(item);
+        acc[item.agenda as AreaKey].push(item);
         return acc;
       }, {} as { [key in AreaKey]: LearningItem[] });
       setLearningItems(groupedItems);
+      console.log(groupedItems);
+
     } catch (err) {
       console.error('Failed to fetch items:', err);
       setError('Failed to fetch learning items. Please try again later.');
@@ -256,7 +260,7 @@ const AISafetyExplorer: React.FC = () => {
                   >
                     <div className={`relative h-48 bg-gradient-to-br ${gradientColor}`}>
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <Icon className="w-24 h-24 text-white opacity-30" />
+                        {/* <Icon className="w-24 h-24 text-white opacity-30" /> */}
                       </div>
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                       <div className="absolute bottom-4 left-4 right-4">
@@ -271,7 +275,8 @@ const AISafetyExplorer: React.FC = () => {
                       <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        onClick={() => item.type === 'paper' ? handleSelectPaper(item.id) : window.open(item.link, '_blank')}
+                        // onClick={() => item.type === 'paper' ? handleSelectPaper(item.id) : window.open(item.link, '_blank')}
+                        onClick={() => window.open(`/explorer/${item.id}`, '_blank')}
                         className="w-full px-4 py-2 bg-purple-600 dark:bg-purple-500 text-white rounded-full transition-all duration-300 hover:bg-purple-700 dark:hover:bg-purple-600"
                       >
                         {item.type === 'paper' ? 'Preview Paper' : 'Explore'}
@@ -284,7 +289,7 @@ const AISafetyExplorer: React.FC = () => {
                     transition={{ duration: 0.2 }}
                     className="absolute top-2 right-2 w-10 h-10 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center shadow-lg"
                   >
-                    <Icon className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                    {/* <Icon className="w-6 h-6 text-purple-600 dark:text-purple-400" /> */}
                   </motion.div>
                 </motion.div>
               );

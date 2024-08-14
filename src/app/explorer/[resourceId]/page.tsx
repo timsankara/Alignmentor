@@ -58,9 +58,11 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
         }
       };
       const result = await dynamodb.get(params).promise();
+      console.log(result);
 
-      if (result.Item && result.Item.type === 'paper') {
+      if (result.Item) {
         const arxivId = result.Item.link.split('/').pop();
+        console.log("arxivId: ", arxivId);
         // setPdfUrl(`https://arxiv.org/pdf/${arxivId}`);
         // console.log(`https://arxiv.org/pdf/${arxivId}`);
         setPdfUrl(`${API_BASE_URL}/api/pdf/${arxivId}`);
