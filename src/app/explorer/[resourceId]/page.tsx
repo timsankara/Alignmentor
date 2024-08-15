@@ -340,7 +340,7 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
                 <p className="font-semibold text-gray-700 mb-2">{discussion.user}</p>
                 <p
                   className="text-gray-600 cursor-pointer hover:bg-yellow-100"
-                  onClick={() => handleDiscussionTextClick(discussion.text, discussion.pdfPosition)}
+                  // onClick={() => handleDiscussionTextClick(discussion.text, discussion.pdfPosition)}
                 >
                   {discussion.text}
                 </p>
