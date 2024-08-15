@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
-import { MessageSquare, Search, MessageCircle, Highlighter } from 'lucide-react';
+import { MessageSquare, Search, MessageCircle, Highlighter, Copy, Globe, Languages, HelpCircle } from 'lucide-react';
 import { DynamoDB } from 'aws-sdk';
 
 // Import styles
@@ -30,36 +30,58 @@ interface TooltipProps {
   y: number;
   onComment: () => void;
   onHighlight: () => void;
+  onCopy: () => void;
+  onSearch: () => void;
+  onTranslate: () => void;
+  onAskQuestion: () => void;
 }
 
-const Tooltip: React.FC<TooltipProps> = ({ x, y, onComment, onHighlight }) => (
+interface Discussion {
+  user: string;
+  text: string;
+  replyTo?: string;
+}
+
+const Tooltip: React.FC<TooltipProps> = ({ x, y, onComment, onHighlight, onCopy, onSearch, onTranslate, onAskQuestion }) => (
   <div
     style={{
       position: 'absolute',
       left: `${x}px`,
       top: `${y}px`,
-      backgroundColor: 'white',
-      border: '1px solid #ccc',
-      borderRadius: '4px',
+      backgroundColor: 'rgba(255, 255, 255, 0.95)',
+      borderRadius: '12px',
       padding: '8px',
-      boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+      boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
       zIndex: 1000,
+      backdropFilter: 'blur(10px)',
+      border: '1px solid rgba(255, 255, 255, 0.2)',
     }}
   >
-    <button onClick={onComment} className="flex items-center p-2 hover:bg-gray-100 rounded">
-      <MessageCircle size={16} className="mr-2" />
-      Comment
-    </button>
-    <button onClick={onHighlight} className="flex items-center p-2 hover:bg-gray-100 rounded">
-      <Highlighter size={16} className="mr-2" />
-      Highlight
-    </button>
+    <div className="grid grid-cols-3 gap-2">
+      <TooltipButton icon={<MessageCircle size={16} />} label="Comment" onClick={onComment} />
+      <TooltipButton icon={<Highlighter size={16} />} label="Highlight" onClick={onHighlight} />
+      <TooltipButton icon={<Copy size={16} />} label="Copy" onClick={onCopy} />
+      <TooltipButton icon={<Globe size={16} />} label="Search" onClick={onSearch} />
+      <TooltipButton icon={<Languages size={16} />} label="Translate" onClick={onTranslate} />
+      <TooltipButton icon={<HelpCircle size={16} />} label="Ask" onClick={onAskQuestion} />
+    </div>
   </div>
+);
+
+const TooltipButton: React.FC<{ icon: React.ReactNode; label: string; onClick: () => void }> = ({ icon, label, onClick }) => (
+  <button
+    onClick={onClick}
+    className="flex flex-col items-center justify-center p-2 rounded-lg transition-all hover:bg-gray-100"
+    style={{ width: '60px', height: '60px' }}
+  >
+    {icon}
+    <span className="mt-1 text-xs font-medium text-gray-600">{label}</span>
+  </button>
 );
 
 const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
   const [pdfUrl, setPdfUrl] = useState('');
-  const [discussions, setDiscussions] = useState<any[]>([]);
+  const [discussions, setDiscussions] = useState<Discussion[]>([]);
   const [query, setQuery] = useState('');
   const [aiResponse, setAiResponse] = useState('');
   const [activeTab, setActiveTab] = useState('discussions');
@@ -166,6 +188,28 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
     setShowTooltip(false);
   };
 
+  const handleCopy = () => {
+    navigator.clipboard.writeText(selectedText);
+    setShowTooltip(false);
+  };
+
+  const handleSearch = () => {
+    window.open(`https://www.google.com/search?q=${encodeURIComponent(selectedText)}`, '_blank');
+    setShowTooltip(false);
+  };
+
+  const handleTranslate = () => {
+    window.open(`https://translate.google.com/?text=${encodeURIComponent(selectedText)}`, '_blank');
+    setShowTooltip(false);
+  };
+
+  const handleAskQuestion = () => {
+    setActiveTab('discussions');
+    setDiscussions([...discussions, { user: 'You', text: selectedText, replyTo: undefined }]);
+    setQuery('');
+    setShowTooltip(false);
+  };
+
   const TabButton: React.FC<{ icon: React.ReactNode, label: string, isActive: boolean, onClick: () => void }> = ({ icon, label, isActive, onClick }) => (
     <button
       onClick={onClick}
@@ -203,6 +247,10 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
             y={tooltipPosition.y}
             onComment={handleComment}
             onHighlight={handleHighlight}
+            onCopy={handleCopy}
+            onSearch={handleSearch}
+            onTranslate={handleTranslate}
+            onAskQuestion={handleAskQuestion}
           />
         )}
       </div>
@@ -223,12 +271,32 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
         </div>
         {activeTab === 'discussions' && (
           <div className="space-y-4">
-            {discussions.map((discussion: any, index: number) => (
+            {discussions.map((discussion: Discussion, index: number) => (
               <div key={index} className="p-4 bg-gray-50 rounded-lg shadow">
+                {discussion.replyTo && (
+                  <div className="mb-2 p-2 bg-gray-100 rounded border-l-4 border-blue-500">
+                    <p className="text-sm text-gray-600">{discussion.replyTo}</p>
+                  </div>
+                )}
                 <p className="font-semibold text-gray-700 mb-2">{discussion.user}</p>
                 <p className="text-gray-600">{discussion.text}</p>
               </div>
             ))}
+            <div className="mt-4">
+              <input
+                type="text"
+                placeholder="Ask a question about the selected text..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <button
+                onClick={handleQuery}
+                className="mt-2 w-full py-3 bg-blue-500 text-white rounded-lg transition-all hover:bg-blue-600"
+              >
+                Ask Question
+              </button>
+            </div>
           </div>
         )}
         {activeTab === 'ai-query' && (
