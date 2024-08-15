@@ -1,19 +1,16 @@
 'use client'
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { MessageSquare, Search, MessageCircle, Highlighter, Copy, Globe, Languages, HelpCircle } from 'lucide-react';
 import { DynamoDB } from 'aws-sdk';
+import { Viewer, SpecialZoomLevel, ViewerProps } from '@react-pdf-viewer/core';
+import { pageNavigationPlugin } from '@react-pdf-viewer/page-navigation';
+
 
 // Import styles
 import '@react-pdf-viewer/core/lib/styles/index.css';
 import '@react-pdf-viewer/default-layout/lib/styles/index.css';
-
-// Dynamically import the Viewer component
-const PDFViewer = dynamic(
-  () => import('@react-pdf-viewer/core').then(mod => mod.Viewer),
-  { ssr: false }
-);
 
 // Dynamically import the Worker component
 const PDFWorker = dynamic(
@@ -40,6 +37,7 @@ interface Discussion {
   user: string;
   text: string;
   replyTo?: string;
+  pdfPosition?: { pageIndex: number; top: number };
 }
 
 const Tooltip: React.FC<TooltipProps> = ({ x, y, onComment, onHighlight, onCopy, onSearch, onTranslate, onAskQuestion }) => (
@@ -89,7 +87,13 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
   const [showTooltip, setShowTooltip] = useState(false);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
   const [selectedText, setSelectedText] = useState('');
+  const [currentPageIndex, setCurrentPageIndex] = useState(0);
+  const [highlightedText, setHighlightedText] = useState('');
   const pdfContainerRef = useRef<HTMLDivElement>(null);
+  const pdfViewerRef = useRef<Viewer>(null);
+  const pageNavigationPluginInstance = pageNavigationPlugin();
+  const { jumpToPage } = pageNavigationPluginInstance;
+
 
   // Initialize DynamoDB client
   const dynamodb = new DynamoDB.DocumentClient({
@@ -205,9 +209,58 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
 
   const handleAskQuestion = () => {
     setActiveTab('discussions');
-    setDiscussions([...discussions, { user: 'You', text: selectedText, replyTo: undefined }]);
+    setDiscussions([...discussions, {
+      user: 'You',
+      text: selectedText,
+      replyTo: undefined,
+      pdfPosition: { pageIndex: currentPageIndex, top: window.scrollY }
+    }]);
     setQuery('');
     setShowTooltip(false);
+  };
+
+  const handleDiscussionTextClick = (text: string, pdfPosition?: { pageIndex: number; top: number }) => {
+    if (pdfPosition && jumpToPage) {
+      jumpToPage(pdfPosition.pageIndex);
+      setTimeout(() => {
+        if (pdfContainerRef.current) {
+          pdfContainerRef.current.scrollTo(0, pdfPosition.top);
+        }
+      }, 100);
+      setHighlightedText(text);
+      setTimeout(() => setHighlightedText(''), 3000); // Remove highlight after 3 seconds
+    }
+  };
+
+  const renderPage = useCallback(
+    (props: any) => (
+      <>
+        {props.canvasLayer.children}
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+        }}>
+          {highlightedText && (
+            <mark style={{
+              backgroundColor: 'yellow',
+              color: 'black',
+            }}>
+              {highlightedText}
+            </mark>
+          )}
+        </div>
+        {props.textLayer.children}
+        {props.annotationLayer.children}
+      </>
+    ),
+    [highlightedText]
+  );
+
+  const handlePageChange = (e: any) => {
+    setCurrentPageIndex(e.currentPage);
   };
 
   const TabButton: React.FC<{ icon: React.ReactNode, label: string, isActive: boolean, onClick: () => void }> = ({ icon, label, isActive, onClick }) => (
@@ -238,7 +291,13 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
             onMouseUp={handleTextSelection}
             onContextMenu={handleRightClick}
           >
-            <PDFViewer fileUrl={pdfUrl} />
+            <Viewer
+              fileUrl={pdfUrl}
+              defaultScale={SpecialZoomLevel.PageFit}
+              onPageChange={handlePageChange}
+              renderPage={renderPage}
+              ref={pdfViewerRef}
+            />
           </div>
         </PDFWorker>
         {showTooltip && (
@@ -279,7 +338,12 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
                   </div>
                 )}
                 <p className="font-semibold text-gray-700 mb-2">{discussion.user}</p>
-                <p className="text-gray-600">{discussion.text}</p>
+                <p
+                  className="text-gray-600 cursor-pointer hover:bg-yellow-100"
+                  onClick={() => handleDiscussionTextClick(discussion.text, discussion.pdfPosition)}
+                >
+                  {discussion.text}
+                </p>
               </div>
             ))}
             <div className="mt-4">
