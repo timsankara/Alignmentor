@@ -4,9 +4,8 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { MessageSquare, Search, MessageCircle, Highlighter, Copy, Globe, Languages, HelpCircle } from 'lucide-react';
 import { DynamoDB } from 'aws-sdk';
-import { Viewer, SpecialZoomLevel, ViewerProps } from '@react-pdf-viewer/core';
+import { Viewer, SpecialZoomLevel } from '@react-pdf-viewer/core';
 import { pageNavigationPlugin } from '@react-pdf-viewer/page-navigation';
-
 
 // Import styles
 import '@react-pdf-viewer/core/lib/styles/index.css';
@@ -94,7 +93,6 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
   const pageNavigationPluginInstance = pageNavigationPlugin();
   const { jumpToPage } = pageNavigationPluginInstance;
 
-
   // Initialize DynamoDB client
   const dynamodb = new DynamoDB.DocumentClient({
     region: "us-east-1",
@@ -132,13 +130,10 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
         }
       };
       const result = await dynamodb.get(params).promise();
-      console.log(result);
 
       if (result.Item) {
         const arxivId = result.Item.link.split('/').pop();
-        console.log("arxivId: ", arxivId);
         setPdfUrl(`${API_BASE_URL}/api/pdf/${arxivId}`);
-        console.log(`PDF URL: ${API_BASE_URL}/api/pdf/${arxivId}`);
         setDiscussions(result.Item.discussions || []);
       } else {
         console.error('Item not found or not a paper');
@@ -245,8 +240,8 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
         }}>
           {highlightedText && (
             <mark style={{
-              backgroundColor: 'yellow',
-              color: 'black',
+              backgroundColor: 'rgba(255, 213, 79, 0.4)',
+              color: 'inherit',
             }}>
               {highlightedText}
             </mark>
@@ -266,30 +261,30 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
   const TabButton: React.FC<{ icon: React.ReactNode, label: string, isActive: boolean, onClick: () => void }> = ({ icon, label, isActive, onClick }) => (
     <button
       onClick={onClick}
-      className={`flex items-center px-4 py-2 mr-2 rounded-lg transition-all ${isActive ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-        }`}
+      className={`flex items-center px-4 py-2 mr-2 rounded-full transition-all ${isActive ? 'bg-gray-200 text-gray-800' : 'text-gray-600 hover:bg-gray-100'}`}
     >
       {icon}
-      <span className="ml-2">{label}</span>
+      <span className="ml-2 font-medium">{label}</span>
     </button>
   );
 
   const LoadingSpinner: React.FC = () => (
     <div className="flex justify-center items-center h-screen">
-      <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-500"></div>
+      <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-gray-900"></div>
     </div>
   );
 
   if (isLoading) return <LoadingSpinner />;
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      <div className="w-3/5 p-8 overflow-auto" ref={pdfContainerRef}>
+    <div className="flex h-screen bg-white">
+      <div className="w-2/3 p-4 border-r border-gray-200" ref={pdfContainerRef}>
         <PDFWorker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
           <div
-            style={{ height: 'calc(100vh - 4rem)' }}
+            style={{ height: 'calc(100vh - 2rem)' }}
             onMouseUp={handleTextSelection}
             onContextMenu={handleRightClick}
+            className="rounded-lg overflow-hidden shadow-lg"
           >
             <Viewer
               fileUrl={pdfUrl}
@@ -313,8 +308,8 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
           />
         )}
       </div>
-      <div className="w-2/5 p-8 bg-white shadow-lg">
-        <div className="flex mb-6">
+      <div className="w-1/3 p-6 bg-gray-50">
+        <div className="flex mb-6 bg-white rounded-full p-1 shadow-sm">
           <TabButton
             icon={<MessageSquare size={20} />}
             label="Discussions"
@@ -331,16 +326,16 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
         {activeTab === 'discussions' && (
           <div className="space-y-4">
             {discussions.map((discussion: Discussion, index: number) => (
-              <div key={index} className="p-4 bg-gray-50 rounded-lg shadow">
+              <div key={index} className="p-4 bg-white rounded-lg shadow-sm transition-all hover:shadow-md">
                 {discussion.replyTo && (
-                  <div className="mb-2 p-2 bg-gray-100 rounded border-l-4 border-blue-500">
+                  <div className="mb-2 p-2 bg-gray-50 rounded border-l-4 border-blue-400">
                     <p className="text-sm text-gray-600">{discussion.replyTo}</p>
                   </div>
                 )}
-                <p className="font-semibold text-gray-700 mb-2">{discussion.user}</p>
+                <p className="font-semibold text-gray-800 mb-2">{discussion.user}</p>
                 <p
-                  className="text-gray-600 cursor-pointer hover:bg-yellow-100"
-                  // onClick={() => handleDiscussionTextClick(discussion.text, discussion.pdfPosition)}
+                  className="text-gray-700 cursor-pointer hover:bg-yellow-50 rounded p-1 transition-all"
+                  onClick={() => handleDiscussionTextClick(discussion.text, discussion.pdfPosition)}
                 >
                   {discussion.text}
                 </p>
@@ -349,14 +344,14 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
             <div className="mt-4">
               <input
                 type="text"
-                placeholder="Ask a question about the selected text..."
+                placeholder="Ask a question..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full p-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all"
               />
               <button
                 onClick={handleQuery}
-                className="mt-2 w-full py-3 bg-blue-500 text-white rounded-lg transition-all hover:bg-blue-600"
+                className="mt-2 w-full py-3 bg-blue-500 text-white rounded-full transition-all hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50"
               >
                 Ask Question
               </button>
@@ -367,21 +362,21 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
           <div className="space-y-4">
             <input
               type="text"
-              placeholder="Ask a question about the paper..."
+              placeholder="Ask AI about the paper..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+              className="w-full p-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all"
+              />
             <button
               onClick={handleQuery}
-              className="w-full py-3 bg-blue-500 text-white rounded-lg transition-all hover:bg-blue-600"
+              className="mt-2 w-full py-3 bg-blue-500 text-white rounded-full transition-all hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50"
             >
               Submit Query
             </button>
             {aiResponse && (
-              <div className="p-4 bg-gray-50 rounded-lg shadow">
-                <p className="font-semibold text-gray-700 mb-2">AI Response:</p>
-                <p className="text-gray-600">{aiResponse}</p>
+              <div className="mt-4 p-4 bg-white rounded-lg shadow-sm transition-all hover:shadow-md">
+                <p className="font-semibold text-gray-800 mb-2">AI Response:</p>
+                <p className="text-gray-700">{aiResponse}</p>
               </div>
             )}
           </div>
