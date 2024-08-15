@@ -1,8 +1,8 @@
 'use client'
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
-import { MessageSquare, Search } from 'lucide-react';
+import { MessageSquare, Search, MessageCircle, Highlighter } from 'lucide-react';
 import { DynamoDB } from 'aws-sdk';
 
 // Import styles
@@ -25,6 +25,38 @@ interface ExplorerPageProps {
   params: { resourceId: string };
 }
 
+interface TooltipProps {
+  x: number;
+  y: number;
+  onComment: () => void;
+  onHighlight: () => void;
+}
+
+const Tooltip: React.FC<TooltipProps> = ({ x, y, onComment, onHighlight }) => (
+  <div
+    style={{
+      position: 'absolute',
+      left: `${x}px`,
+      top: `${y}px`,
+      backgroundColor: 'white',
+      border: '1px solid #ccc',
+      borderRadius: '4px',
+      padding: '8px',
+      boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+      zIndex: 1000,
+    }}
+  >
+    <button onClick={onComment} className="flex items-center p-2 hover:bg-gray-100 rounded">
+      <MessageCircle size={16} className="mr-2" />
+      Comment
+    </button>
+    <button onClick={onHighlight} className="flex items-center p-2 hover:bg-gray-100 rounded">
+      <Highlighter size={16} className="mr-2" />
+      Highlight
+    </button>
+  </div>
+);
+
 const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
   const [pdfUrl, setPdfUrl] = useState('');
   const [discussions, setDiscussions] = useState<any[]>([]);
@@ -32,6 +64,10 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
   const [aiResponse, setAiResponse] = useState('');
   const [activeTab, setActiveTab] = useState('discussions');
   const [isLoading, setIsLoading] = useState(true);
+  const [showTooltip, setShowTooltip] = useState(false);
+  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
+  const [selectedText, setSelectedText] = useState('');
+  const pdfContainerRef = useRef<HTMLDivElement>(null);
 
   // Initialize DynamoDB client
   const dynamodb = new DynamoDB.DocumentClient({
@@ -41,12 +77,24 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
   });
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '';
 
-
   useEffect(() => {
     if (params.resourceId) {
       fetchPdfData(params.resourceId);
     }
   }, [params.resourceId]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (pdfContainerRef.current && !pdfContainerRef.current.contains(event.target as Node)) {
+        setShowTooltip(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const fetchPdfData = async (id: string) => {
     setIsLoading(true);
@@ -63,12 +111,8 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
       if (result.Item) {
         const arxivId = result.Item.link.split('/').pop();
         console.log("arxivId: ", arxivId);
-        // setPdfUrl(`https://arxiv.org/pdf/${arxivId}`);
-        // console.log(`https://arxiv.org/pdf/${arxivId}`);
         setPdfUrl(`${API_BASE_URL}/api/pdf/${arxivId}`);
         console.log(`PDF URL: ${API_BASE_URL}/api/pdf/${arxivId}`);
-        // setPdfUrl(`/api/pdf/${arxivId}`);
-        // console.log(`PDF URL: /api/pdf/${arxivId}`);
         setDiscussions(result.Item.discussions || []);
       } else {
         console.error('Item not found or not a paper');
@@ -86,6 +130,40 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
     setTimeout(() => {
       setAiResponse(`AI response to: "${query}"`);
     }, 1000);
+  };
+
+  const handleTextSelection = () => {
+    const selection = window.getSelection();
+    if (selection && selection.toString().trim() !== '') {
+      setSelectedText(selection.toString());
+      const range = selection.getRangeAt(0);
+      const rect = range.getBoundingClientRect();
+      setTooltipPosition({
+        x: rect.left + window.scrollX,
+        y: rect.bottom + window.scrollY,
+      });
+    } else {
+      setSelectedText('');
+    }
+  };
+
+  const handleRightClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (selectedText) {
+      setShowTooltip(true);
+    }
+  };
+
+  const handleComment = () => {
+    console.log('Comment on:', selectedText);
+    // Implement comment functionality
+    setShowTooltip(false);
+  };
+
+  const handleHighlight = () => {
+    console.log('Highlight:', selectedText);
+    // Implement highlight functionality
+    setShowTooltip(false);
   };
 
   const TabButton: React.FC<{ icon: React.ReactNode, label: string, isActive: boolean, onClick: () => void }> = ({ icon, label, isActive, onClick }) => (
@@ -109,13 +187,24 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
 
   return (
     <div className="flex h-screen bg-gray-50">
-      <div className="w-3/5 p-8 overflow-auto">
-        {/* I set this @dist manually to align with what was installed */}
+      <div className="w-3/5 p-8 overflow-auto" ref={pdfContainerRef}>
         <PDFWorker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
-          <div style={{ height: 'calc(100vh - 4rem)' }}>
+          <div
+            style={{ height: 'calc(100vh - 4rem)' }}
+            onMouseUp={handleTextSelection}
+            onContextMenu={handleRightClick}
+          >
             <PDFViewer fileUrl={pdfUrl} />
           </div>
         </PDFWorker>
+        {showTooltip && (
+          <Tooltip
+            x={tooltipPosition.x}
+            y={tooltipPosition.y}
+            onComment={handleComment}
+            onHighlight={handleHighlight}
+          />
+        )}
       </div>
       <div className="w-2/5 p-8 bg-white shadow-lg">
         <div className="flex mb-6">
