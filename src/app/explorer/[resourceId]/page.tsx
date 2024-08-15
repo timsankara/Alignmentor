@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import dynamic from 'next/dynamic';
-import { MessageSquare, Search, MessageCircle, Highlighter, Copy, Globe, Languages, HelpCircle } from 'lucide-react';
+import { MessageSquare, Search, MessageCircle, Highlighter, Copy, Globe, Languages, HelpCircle, Moon, Sun } from 'lucide-react';
 import { DynamoDB } from 'aws-sdk';
 import { Viewer, SpecialZoomLevel } from '@react-pdf-viewer/core';
 import { pageNavigationPlugin } from '@react-pdf-viewer/page-navigation';
@@ -68,11 +68,11 @@ const Tooltip: React.FC<TooltipProps> = ({ x, y, onComment, onHighlight, onCopy,
 const TooltipButton: React.FC<{ icon: React.ReactNode; label: string; onClick: () => void }> = ({ icon, label, onClick }) => (
   <button
     onClick={onClick}
-    className="flex flex-col items-center justify-center p-2 rounded-lg transition-all hover:bg-gray-100"
+    className="flex flex-col items-center justify-center p-2 rounded-lg transition-all hover:bg-gray-100 dark:hover:bg-gray-700"
     style={{ width: '60px', height: '60px' }}
   >
     {icon}
-    <span className="mt-1 text-xs font-medium text-gray-600">{label}</span>
+    <span className="mt-1 text-xs font-medium text-gray-600 dark:text-gray-300">{label}</span>
   </button>
 );
 
@@ -88,6 +88,7 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
   const [selectedText, setSelectedText] = useState('');
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
   const [highlightedText, setHighlightedText] = useState('');
+  const [darkMode, setDarkMode] = useState(false);
   const pdfContainerRef = useRef<HTMLDivElement>(null);
   const pdfViewerRef = useRef<Viewer>(null);
   const pageNavigationPluginInstance = pageNavigationPlugin();
@@ -96,8 +97,8 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
   // Initialize DynamoDB client
   const dynamodb = new DynamoDB.DocumentClient({
     region: "us-east-1",
-    accessKeyId: "AKIA55SBB5ENSF3SCWFI",
-    secretAccessKey: "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",
+    accessKeyId: process.env.NEXT_PUBLIC_AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.NEXT_PUBLIC_AWS_SECRET_ACCESS_KEY,
   });
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '';
 
@@ -119,6 +120,14 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [darkMode]);
 
   const fetchPdfData = async (id: string) => {
     setIsLoading(true);
@@ -261,7 +270,7 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
   const TabButton: React.FC<{ icon: React.ReactNode, label: string, isActive: boolean, onClick: () => void }> = ({ icon, label, isActive, onClick }) => (
     <button
       onClick={onClick}
-      className={`flex items-center px-4 py-2 mr-2 rounded-full transition-all ${isActive ? 'bg-gray-200 text-gray-800' : 'text-gray-600 hover:bg-gray-100'}`}
+      className={`flex items-center px-4 py-2 mr-2 rounded-full transition-all ${isActive ? 'bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'}`}
     >
       {icon}
       <span className="ml-2 font-medium">{label}</span>
@@ -270,117 +279,128 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
 
   const LoadingSpinner: React.FC = () => (
     <div className="flex justify-center items-center h-screen">
-      <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-gray-900"></div>
+      <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-gray-900 dark:border-gray-100"></div>
     </div>
   );
 
   if (isLoading) return <LoadingSpinner />;
 
   return (
-    <div className="flex h-screen bg-white">
-      <div className="w-2/3 p-4 border-r border-gray-200" ref={pdfContainerRef}>
-        <PDFWorker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
-          <div
-            style={{ height: 'calc(100vh - 2rem)' }}
-            onMouseUp={handleTextSelection}
-            onContextMenu={handleRightClick}
-            className="rounded-lg overflow-hidden shadow-lg"
-          >
-            <Viewer
-              fileUrl={pdfUrl}
-              defaultScale={SpecialZoomLevel.PageFit}
-              onPageChange={handlePageChange}
-              renderPage={renderPage}
-              ref={pdfViewerRef}
+    <div className={`flex flex-col h-screen bg-white dark:bg-gray-900 transition-colors duration-200`}>
+      <header className="flex justify-between items-center p-4 bg-gray-100 dark:bg-gray-800">
+        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-200">AI Safety Explorer</h1>
+        <button
+          onClick={() => setDarkMode(!darkMode)}
+          className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200"
+        >
+          {darkMode ? <Sun className="text-gray-200" /> : <Moon className="text-gray-800" />}
+        </button>
+      </header>
+      <div className="flex flex-1 overflow-hidden">
+        <div className="w-2/3 p-4 border-r border-gray-200 dark:border-gray-700" ref={pdfContainerRef}>
+          <PDFWorker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
+            <div
+              style={{ height: 'calc(100vh - 8rem)' }}
+              onMouseUp={handleTextSelection}
+              onContextMenu={handleRightClick}
+              className="rounded-lg overflow-hidden shadow-lg"
+            >
+              <Viewer
+                fileUrl={pdfUrl}
+                defaultScale={SpecialZoomLevel.PageFit}
+                onPageChange={handlePageChange}
+                renderPage={renderPage}
+                ref={pdfViewerRef}
+              />
+            </div>
+          </PDFWorker>
+          {showTooltip && (
+            <Tooltip
+              x={tooltipPosition.x}
+              y={tooltipPosition.y}
+              onComment={handleComment}
+              onHighlight={handleHighlight}
+              onCopy={handleCopy}
+              onSearch={handleSearch}
+              onTranslate={handleTranslate}
+              onAskQuestion={handleAskQuestion}
+            />
+          )}
+        </div>
+        <div className="w-1/3 p-6 bg-gray-50 dark:bg-gray-800">
+          <div className="flex mb-6 bg-white dark:bg-gray-700 rounded-full p-1 shadow-sm">
+            <TabButton
+              icon={<MessageSquare size={20} />}
+              label="Discussions"
+              isActive={activeTab === 'discussions'}
+              onClick={() => setActiveTab('discussions')}
+            />
+            <TabButton
+              icon={<Search size={20} />}
+              label="AI Query"
+              isActive={activeTab === 'ai-query'}
+              onClick={() => setActiveTab('ai-query')}
             />
           </div>
-        </PDFWorker>
-        {showTooltip && (
-          <Tooltip
-            x={tooltipPosition.x}
-            y={tooltipPosition.y}
-            onComment={handleComment}
-            onHighlight={handleHighlight}
-            onCopy={handleCopy}
-            onSearch={handleSearch}
-            onTranslate={handleTranslate}
-            onAskQuestion={handleAskQuestion}
-          />
-        )}
-      </div>
-      <div className="w-1/3 p-6 bg-gray-50">
-        <div className="flex mb-6 bg-white rounded-full p-1 shadow-sm">
-          <TabButton
-            icon={<MessageSquare size={20} />}
-            label="Discussions"
-            isActive={activeTab === 'discussions'}
-            onClick={() => setActiveTab('discussions')}
-          />
-          <TabButton
-            icon={<Search size={20} />}
-            label="AI Query"
-            isActive={activeTab === 'ai-query'}
-            onClick={() => setActiveTab('ai-query')}
-          />
-        </div>
-        {activeTab === 'discussions' && (
-          <div className="space-y-4">
-            {discussions.map((discussion: Discussion, index: number) => (
-              <div key={index} className="p-4 bg-white rounded-lg shadow-sm transition-all hover:shadow-md">
-                {discussion.replyTo && (
-                  <div className="mb-2 p-2 bg-gray-50 rounded border-l-4 border-blue-400">
-                    <p className="text-sm text-gray-600">{discussion.replyTo}</p>
-                  </div>
-                )}
-                <p className="font-semibold text-gray-800 mb-2">{discussion.user}</p>
-                <p
-                  className="text-gray-700 cursor-pointer hover:bg-yellow-50 rounded p-1 transition-all"
-                  onClick={() => handleDiscussionTextClick(discussion.text, discussion.pdfPosition)}
+          {activeTab === 'discussions' && (
+            <div className="space-y-4">
+              {discussions.map((discussion: Discussion, index: number) => (
+                <div key={index} className="p-4 bg-white dark:bg-gray-700 rounded-lg shadow-sm transition-all hover:shadow-md">
+                  {discussion.replyTo && (
+                    <div className="mb-2 p-2 bg-gray-50 dark:bg-gray-600 rounded border-l-4 border-blue-400">
+                      <p className="text-sm text-gray-600 dark:text-gray-300">{discussion.replyTo}</p>
+                    </div>
+                  )}
+                  <p className="font-semibold text-gray-800 dark:text-gray-200 mb-2">{discussion.user}</p>
+                  <p
+                    className="text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-yellow-50 dark:hover:bg-gray-600 rounded p-1 transition-all"
+                    onClick={() => handleDiscussionTextClick(discussion.text, discussion.pdfPosition)}
+                  >
+                    {discussion.text}
+                  </p>
+                </div>
+              ))}
+              <div className="mt-4">
+                <input
+                  type="text"
+                  placeholder="Ask a question..."
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 transition-all bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+                />
+                <button
+                  onClick={handleQuery}
+                  className="mt-2 w-full py-3 bg-blue-500 text-white rounded-full transition-all hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-500"
                 >
-                  {discussion.text}
-                </p>
+                  Ask Question
+                </button>
               </div>
-            ))}
-            <div className="mt-4">
+            </div>
+          )}
+          {activeTab === 'ai-query' && (
+            <div className="space-y-4">
               <input
                 type="text"
-                placeholder="Ask a question..."
+                placeholder="Ask AI about the paper..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all"
+                className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 transition-all bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
               />
               <button
                 onClick={handleQuery}
-                className="mt-2 w-full py-3 bg-blue-500 text-white rounded-full transition-all hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50"
+                className="mt-2 w-full py-3 bg-blue-500 text-white rounded-full transition-all hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-500"
               >
-                Ask Question
+                Submit Query
               </button>
+              {aiResponse && (
+                <div className="mt-4 p-4 bg-white dark:bg-gray-700 rounded-lg shadow-sm transition-all hover:shadow-md">
+                  <p className="font-semibold text-gray-800 dark:text-gray-200 mb-2">AI Response:</p>
+                  <p className="text-gray-700 dark:text-gray-300">{aiResponse}</p>
+                </div>
+              )}
             </div>
-          </div>
-        )}
-        {activeTab === 'ai-query' && (
-          <div className="space-y-4">
-            <input
-              type="text"
-              placeholder="Ask AI about the paper..."
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all"
-              />
-            <button
-              onClick={handleQuery}
-              className="mt-2 w-full py-3 bg-blue-500 text-white rounded-full transition-all hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50"
-            >
-              Submit Query
-            </button>
-            {aiResponse && (
-              <div className="mt-4 p-4 bg-white rounded-lg shadow-sm transition-all hover:shadow-md">
-                <p className="font-semibold text-gray-800 mb-2">AI Response:</p>
-                <p className="text-gray-700">{aiResponse}</p>
-              </div>
-            )}
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
