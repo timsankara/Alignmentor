@@ -4,25 +4,19 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { MessageSquare, Search, MessageCircle, Highlighter, Copy, Globe, Languages, HelpCircle } from 'lucide-react';
 import { DynamoDB } from 'aws-sdk';
-import { Viewer, SpecialZoomLevel, PdfJs } from '@react-pdf-viewer/core';
+import { Viewer, SpecialZoomLevel, ViewerProps } from '@react-pdf-viewer/core';
 import { pageNavigationPlugin } from '@react-pdf-viewer/page-navigation';
+
 
 // Import styles
 import '@react-pdf-viewer/core/lib/styles/index.css';
-import '@react-pdf-viewer/page-navigation/lib/styles/index.css';
+import '@react-pdf-viewer/default-layout/lib/styles/index.css';
 
 // Dynamically import the Worker component
 const PDFWorker = dynamic(
   () => import('@react-pdf-viewer/core').then(mod => mod.Worker),
   { ssr: false }
 );
-
-interface Rectangle {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
 
 interface ExplorerPageProps {
   params: { resourceId: string };
@@ -43,19 +37,7 @@ interface Discussion {
   user: string;
   text: string;
   replyTo?: string;
-  pdfPosition?: { pageIndex: number; boundingRect: Rectangle };
-}
-
-interface Highlight {
-  id: string;
-  content: {
-    text: string;
-  };
-  position: {
-    pageIndex: number;
-    boundingRect: Rectangle;
-    rects: Rectangle[];
-  };
+  pdfPosition?: { pageIndex: number; top: number };
 }
 
 const Tooltip: React.FC<TooltipProps> = ({ x, y, onComment, onHighlight, onCopy, onSearch, onTranslate, onAskQuestion }) => (
@@ -106,9 +88,12 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
   const [selectedText, setSelectedText] = useState('');
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
-  const [highlights, setHighlights] = useState<Highlight[]>([]);
+  const [highlightedText, setHighlightedText] = useState('');
   const pdfContainerRef = useRef<HTMLDivElement>(null);
   const pdfViewerRef = useRef<Viewer>(null);
+  const pageNavigationPluginInstance = pageNavigationPlugin();
+  const { jumpToPage } = pageNavigationPluginInstance;
+
 
   // Initialize DynamoDB client
   const dynamodb = new DynamoDB.DocumentClient({
@@ -117,9 +102,6 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
     secretAccessKey: "Dn2iGW5gsceJLZfJNdyPmaCQ8UzxWRv4MJ4WYX2J",
   });
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '';
-
-  const pageNavigationPluginInstance = pageNavigationPlugin();
-  const { jumpToPage } = pageNavigationPluginInstance;
 
   useEffect(() => {
     if (params.resourceId) {
@@ -176,7 +158,7 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
     }, 1000);
   };
 
-  const handleTextSelection = useCallback((e: MouseEvent) => {
+  const handleTextSelection = () => {
     const selection = window.getSelection();
     if (selection && selection.toString().trim() !== '') {
       setSelectedText(selection.toString());
@@ -186,21 +168,17 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
         x: rect.left + window.scrollX,
         y: rect.bottom + window.scrollY,
       });
-      setShowTooltip(true);
     } else {
       setSelectedText('');
-      setShowTooltip(false);
     }
-  }, []);
+  };
 
-  // const handleDocumentLoad = (e: PdfJs.PdfDocument) => {
-  //   if (pdfViewerRef.current) {
-  //     const viewerElement = pdfViewerRef.current.viewer;
-  //     if (viewerElement) {
-  //       viewerElement.addEventListener('mouseup', handleTextSelection);
-  //     }
-  //   }
-  // };
+  const handleRightClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (selectedText) {
+      setShowTooltip(true);
+    }
+  };
 
   const handleComment = () => {
     console.log('Comment on:', selectedText);
@@ -209,35 +187,8 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
   };
 
   const handleHighlight = () => {
-    const selection = window.getSelection();
-    if (selection) {
-      const range = selection.getRangeAt(0);
-      const rects = Array.from(range.getClientRects());
-      const boundingRect = range.getBoundingClientRect();
-
-      const newHighlight: Highlight = {
-        id: `highlight-${Date.now()}`,
-        content: {
-          text: selectedText,
-        },
-        position: {
-          pageIndex: currentPageIndex,
-          boundingRect: {
-            x: boundingRect.x,
-            y: boundingRect.y,
-            width: boundingRect.width,
-            height: boundingRect.height,
-          },
-          rects: rects.map(rect => ({
-            x: rect.x,
-            y: rect.y,
-            width: rect.width,
-            height: rect.height,
-          })),
-        },
-      };
-      setHighlights([...highlights, newHighlight]);
-    }
+    console.log('Highlight:', selectedText);
+    // Implement highlight functionality
     setShowTooltip(false);
   };
 
@@ -262,60 +213,54 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
       user: 'You',
       text: selectedText,
       replyTo: undefined,
-      pdfPosition: { pageIndex: currentPageIndex, boundingRect: {} as Rectangle },
+      pdfPosition: { pageIndex: currentPageIndex, top: window.scrollY }
     }]);
     setQuery('');
     setShowTooltip(false);
   };
 
-  const handleDiscussionTextClick = (text: string, pdfPosition?: { pageIndex: number; boundingRect: Rectangle }) => {
+  const handleDiscussionTextClick = (text: string, pdfPosition?: { pageIndex: number; top: number }) => {
     if (pdfPosition && jumpToPage) {
       jumpToPage(pdfPosition.pageIndex);
-      const newHighlight: Highlight = {
-        id: `highlight-${Date.now()}`,
-        content: {
-          text: text,
-        },
-        position: {
-          pageIndex: pdfPosition.pageIndex,
-          boundingRect: pdfPosition.boundingRect,
-          rects: [pdfPosition.boundingRect],
-        },
-      };
-      setHighlights([...highlights, newHighlight]);
       setTimeout(() => {
-        setHighlights(highlights => highlights.filter(h => h.id !== newHighlight.id));
-      }, 3000);
+        if (pdfContainerRef.current) {
+          pdfContainerRef.current.scrollTo(0, pdfPosition.top);
+        }
+      }, 100);
+      setHighlightedText(text);
+      setTimeout(() => setHighlightedText(''), 3000); // Remove highlight after 3 seconds
     }
   };
 
-  const handlePageChange = (e: { currentPage: number; doc: PdfJs.PdfDocument }) => {
-    setCurrentPageIndex(e.currentPage);
-  };
-
-  const renderHighlights = (props: { pageIndex: number; scale: number }) => {
-    const { pageIndex, scale } = props;
-    return (
+  const renderPage = useCallback(
+    (props: any) => (
       <>
-        {highlights
-          .filter((highlight) => highlight.position.pageIndex === pageIndex)
-          .map((highlight) => (
-            <div
-              key={highlight.id}
-              style={{
-                position: 'absolute',
-                left: highlight.position.boundingRect.x * scale,
-                top: highlight.position.boundingRect.y * scale,
-                width: highlight.position.boundingRect.width * scale,
-                height: highlight.position.boundingRect.height * scale,
-                backgroundColor: 'yellow',
-                opacity: 0.4,
-                pointerEvents: 'none',
-              }}
-            />
-          ))}
+        {props.canvasLayer.children}
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+        }}>
+          {highlightedText && (
+            <mark style={{
+              backgroundColor: 'yellow',
+              color: 'black',
+            }}>
+              {highlightedText}
+            </mark>
+          )}
+        </div>
+        {props.textLayer.children}
+        {props.annotationLayer.children}
       </>
-    );
+    ),
+    [highlightedText]
+  );
+
+  const handlePageChange = (e: any) => {
+    setCurrentPageIndex(e.currentPage);
   };
 
   const TabButton: React.FC<{ icon: React.ReactNode, label: string, isActive: boolean, onClick: () => void }> = ({ icon, label, isActive, onClick }) => (
@@ -341,24 +286,16 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
     <div className="flex h-screen bg-gray-50">
       <div className="w-3/5 p-8 overflow-auto" ref={pdfContainerRef}>
         <PDFWorker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
-          <div style={{ height: 'calc(100vh - 4rem)' }}>
+          <div
+            style={{ height: 'calc(100vh - 4rem)' }}
+            onMouseUp={handleTextSelection}
+            onContextMenu={handleRightClick}
+          >
             <Viewer
               fileUrl={pdfUrl}
               defaultScale={SpecialZoomLevel.PageFit}
               onPageChange={handlePageChange}
-              plugins={[pageNavigationPluginInstance]}
-              // onDocumentLoad={handleDocumentLoad}
-              renderPage={(props) => (
-                <>
-                  {props.canvasLayer.children}
-                  {props.textLayer.children}
-                  {renderHighlights({
-                    pageIndex: props.pageIndex,
-                    scale: props.scale,
-                  })}
-                  {props.annotationLayer.children}
-                </>
-              )}
+              renderPage={renderPage}
               ref={pdfViewerRef}
             />
           </div>
