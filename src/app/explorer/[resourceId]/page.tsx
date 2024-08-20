@@ -57,7 +57,7 @@ const Tooltip: React.FC<TooltipProps> = ({ x, y, onComment, onHighlight, onCopy,
     <div className="grid grid-cols-3 gap-2">
       <TooltipButton icon={<MessageCircle size={16} />} label="Comment" onClick={onComment} />
       <TooltipButton icon={<Highlighter size={16} />} label="Highlight" onClick={onHighlight} />
-      <TooltipButton icon={<Copy size={16} />} label="Copy" onClick={onCopy} />
+      <TooltipButton icon={<Copy size={16} className='text-black' />} label="Copy" onClick={onCopy} />
       <TooltipButton icon={<Globe size={16} className='bg-black' />} label="Search" onClick={onSearch} />
       <TooltipButton icon={<Languages size={16} />} label="Translate" onClick={onTranslate} />
       <TooltipButton icon={<HelpCircle size={16} />} label="Ask" onClick={onAskQuestion} />
