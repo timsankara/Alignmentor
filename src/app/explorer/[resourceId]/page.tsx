@@ -306,7 +306,7 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
               style={{ height: '100vh' }}
               onMouseUp={handleTextSelection}
               onContextMenu={handleRightClick}
-              className="rounded-lg overflow-hidden shadow-lg"
+              className="rounded-lg overflow-hidden shadow-lg bg-white dark:bg-black"
             >
               <Viewer
                 fileUrl={pdfUrl}
