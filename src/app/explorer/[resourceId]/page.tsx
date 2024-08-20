@@ -81,7 +81,7 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
   const [discussions, setDiscussions] = useState<Discussion[]>([]);
   const [query, setQuery] = useState('');
   const [aiResponse, setAiResponse] = useState('');
-  const [activeTab, setActiveTab] = useState('discussions');
+  const [activeTab, setActiveTab] = useState('ai-query');
   const [isLoading, setIsLoading] = useState(true);
   const [showTooltip, setShowTooltip] = useState(false);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
@@ -332,16 +332,16 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
         <div className="w-1/2 p-6 bg-gray-50 dark:bg-gray-800">
           <div className="flex mb-6 bg-white dark:bg-gray-700 rounded-full p-1 shadow-sm">
             <TabButton
-              icon={<MessageSquare size={20} />}
-              label="Discussions"
-              isActive={activeTab === 'discussions'}
-              onClick={() => setActiveTab('discussions')}
-            />
-            <TabButton
               icon={<Search size={20} />}
               label="AI Query"
               isActive={activeTab === 'ai-query'}
               onClick={() => setActiveTab('ai-query')}
+            />
+            <TabButton
+              icon={<MessageSquare size={20} />}
+              label="Discussions"
+              isActive={activeTab === 'discussions'}
+              onClick={() => setActiveTab('discussions')}
             />
           </div>
           {activeTab === 'discussions' && (
