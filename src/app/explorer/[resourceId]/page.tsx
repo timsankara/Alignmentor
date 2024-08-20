@@ -302,7 +302,8 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
         <div className="w-1/2 p-0 border-r border-gray-200 dark:border-gray-700 dark:bg-black" ref={pdfContainerRef}>
           <PDFWorker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
             <div
-              style={{ height: 'calc(100vh - 8rem)' }}
+              // style={{ height: 'calc(100vh - 8rem)' }}
+              style={{ height: '100vh' }}
               onMouseUp={handleTextSelection}
               onContextMenu={handleRightClick}
               className="rounded-lg overflow-hidden shadow-lg"
