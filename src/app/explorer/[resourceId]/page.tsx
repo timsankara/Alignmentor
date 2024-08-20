@@ -89,6 +89,7 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
   const [highlightedText, setHighlightedText] = useState('');
   const [darkMode, setDarkMode] = useState(false);
+  const [paperTitle, setPaperTitle] = useState("")
   const pdfContainerRef = useRef<HTMLDivElement>(null);
   const pdfViewerRef = useRef<Viewer>(null);
   const pageNavigationPluginInstance = pageNavigationPlugin();
@@ -142,6 +143,7 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
 
       if (result.Item) {
         const arxivId = result.Item.link.split('/').pop();
+        setPaperTitle(result.Item.title)
         setPdfUrl(`${API_BASE_URL}/api/pdf/${arxivId}`);
         setDiscussions(result.Item.discussions || []);
       } else {
@@ -288,7 +290,7 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
   return (
     <div className={`flex flex-col h-screen bg-white dark:bg-gray-900 transition-colors duration-200`}>
       <header className="flex justify-between items-center p-4 bg-gray-100 dark:bg-gray-800">
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-200">AI Safety Explorer</h1>
+        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-200">Explore {paperTitle}</h1>
         <button
           onClick={() => setDarkMode(!darkMode)}
           className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200"
