@@ -299,7 +299,7 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
         </button>
       </header>
       <div className="flex flex-1 overflow-hidden">
-        <div className="w-1/2 p-4 border-r border-gray-200 dark:border-gray-700" ref={pdfContainerRef}>
+        <div className="w-1/2 p-0 border-r border-gray-200 dark:border-gray-700 dark:bg-black" ref={pdfContainerRef}>
           <PDFWorker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
             <div
               style={{ height: 'calc(100vh - 8rem)' }}
