@@ -329,7 +329,7 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
             />
           )}
         </div>
-        <div className="w-1/3 p-6 bg-gray-50 dark:bg-gray-800">
+        <div className="w-1/2 p-6 bg-gray-50 dark:bg-gray-800">
           <div className="flex mb-6 bg-white dark:bg-gray-700 rounded-full p-1 shadow-sm">
             <TabButton
               icon={<MessageSquare size={20} />}
