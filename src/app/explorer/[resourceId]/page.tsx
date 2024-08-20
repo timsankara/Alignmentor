@@ -58,7 +58,7 @@ const Tooltip: React.FC<TooltipProps> = ({ x, y, onComment, onHighlight, onCopy,
       <TooltipButton icon={<MessageCircle size={16} />} label="Comment" onClick={onComment} />
       <TooltipButton icon={<Highlighter size={16} />} label="Highlight" onClick={onHighlight} />
       <TooltipButton icon={<Copy size={16} />} label="Copy" onClick={onCopy} />
-      <TooltipButton icon={<Globe size={16} />} label="Search" onClick={onSearch} />
+      <TooltipButton icon={<Globe size={16} className='bg-black' />} label="Search" onClick={onSearch} />
       <TooltipButton icon={<Languages size={16} />} label="Translate" onClick={onTranslate} />
       <TooltipButton icon={<HelpCircle size={16} />} label="Ask" onClick={onAskQuestion} />
     </div>
@@ -305,7 +305,7 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
               style={{ height: 'calc(100vh - 8rem)' }}
               onMouseUp={handleTextSelection}
               onContextMenu={handleRightClick}
-              className="rounded-lg overflow-hidden shadow-lg bg-black"
+              className="rounded-lg overflow-hidden shadow-lg"
             >
               <Viewer
                 fileUrl={pdfUrl}
