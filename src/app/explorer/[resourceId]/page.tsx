@@ -272,7 +272,7 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
   const TabButton: React.FC<{ icon: React.ReactNode, label: string, isActive: boolean, onClick: () => void }> = ({ icon, label, isActive, onClick }) => (
     <button
       onClick={onClick}
-      className={`flex items-center px-4 py-2 mr-2 rounded-full transition-all ${isActive ? 'bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'}`}
+      className={`flex items-center px-4 py-2 mr-2 rounded-full transition-all ${isActive ? 'bg-gray-200 text-gray-800 dark:bg-gray-900 dark:text-gray-200' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'}`}
     >
       {icon}
       <span className="ml-2 font-medium">{label}</span>
@@ -306,7 +306,7 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
               style={{ height: '100vh' }}
               onMouseUp={handleTextSelection}
               onContextMenu={handleRightClick}
-              className="rounded-lg overflow-hidden shadow-lg bg-white dark:bg-black"
+              className="rounded-lg overflow-hidden shadow-lg"
             >
               <Viewer
                 fileUrl={pdfUrl}
