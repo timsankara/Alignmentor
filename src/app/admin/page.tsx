@@ -26,6 +26,7 @@ interface FeedItem {
   date: string;
   readTime: string;
   link: string,
+  filename: string,
 }
 
 interface DynamoDBItem {
@@ -37,6 +38,7 @@ interface DynamoDBItem {
   readTime: { S: string };
   link: { S: string };
   id: { S: string };
+  filename: { S: string };
 }
 
 function convertDynamoDBItemToFeedItem(item: DynamoDBItem): FeedItem {
@@ -48,7 +50,8 @@ function convertDynamoDBItemToFeedItem(item: DynamoDBItem): FeedItem {
     date: item.date.S,
     readTime: item.readTime.S,
     link: item.link.S,
-    id: item.id.S
+    id: item.id.S,
+    filename: item.filename.S
   };
 }
 
@@ -74,6 +77,17 @@ async function getFeedItems(): Promise<DynamoDBItem[]> {
 //   }
 // }
 
+interface FileObject {
+  bytes: number;
+  created_at: number;
+  filename: string;
+  id: string;
+  object: string;
+  purpose: string;
+  status: string;
+  status_details: null | string;
+}
+
 const AIAgendaDashboard: React.FC = () => {
 
   const openai = new OpenAI({
@@ -89,9 +103,13 @@ const AIAgendaDashboard: React.FC = () => {
     author: '',
     readTime: '',
     link: '',
-    id: ''
+    id: '',
+    filename: ''
   });
   const [darkMode, setDarkMode] = useState(false);
+  const [uploadedFile, setUploadedFile] = useState(false);
+  const [fileItem, setFileItem] = useState<FileObject>();
+  const [uploadingFile, setUploadingFile] = useState(false)
 
   useEffect(() => {
     const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -119,52 +137,51 @@ const AIAgendaDashboard: React.FC = () => {
 
   const uploadToOpenAI = async (e: React.ChangeEvent<HTMLInputElement>) => {
     e.preventDefault();
-    console.log("Changing...");
-
+    setUploadingFile(true);
     const fileInput = e.target;
-
     if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
       console.error('No file selected');
       return;
     }
-
     const selectedFile = fileInput.files[0];
-
     try {
       const file = await openai.files.create({
         file: selectedFile,
         purpose: "assistants",
       });
-      console.log(file);
 
-      // bytes
-      // :
-      // 12947552
-      // created_at
-      // :
-      // 1724402753
-      // filename
-      // :
-      // "2404.19756v3.pdf"
-      // id
-      // :
-      // "file-Vh63K9aysKSso6kND9k8FWoj"
-      // object
-      // :
-      // "file"
-      // purpose
-      // :
-      // "assistants"
-      // status
-      // :
-      // "processed"
-      // status_details
-      // :
-      // null
+      // console.log("Raw file response:", JSON.stringify(file, null, 2));
+
+      setUploadedFile(true);
+
+      // Use a type guard to ensure file matches FileObject structure
+      if (isFileObject(file)) {
+        setFileItem(file);
+        // console.log("File Item set as:", file);
+      } else {
+        console.error("File response does not match expected structure");
+      }
+      setUploadingFile(false);
     } catch (error) {
       console.error('Error uploading file:', error);
     }
   };
+
+  // Type guard function
+  function isFileObject(obj: any): obj is FileObject {
+    return (
+      typeof obj === 'object' &&
+      obj !== null &&
+      'bytes' in obj &&
+      'created_at' in obj &&
+      'filename' in obj &&
+      'id' in obj &&
+      'object' in obj &&
+      'purpose' in obj &&
+      'status' in obj &&
+      'status_details' in obj
+    );
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -183,7 +200,8 @@ const AIAgendaDashboard: React.FC = () => {
         author: '',
         readTime: '',
         link: '',
-        id: ''
+        id: '',
+        filename: ''
       });
     } catch (error) {
       console.error('Failed to create feed item:', error);
@@ -222,23 +240,38 @@ const AIAgendaDashboard: React.FC = () => {
               <Plus size={24} className="mr-2" />
               Create New Feed Item
             </h2>
-            <label className="flex flex-col items-center justify-center w-full h-40 px-4 transition bg-white border-2 border-gray-300 border-dashed rounded-lg cursor-pointer hover:border-gray-400 dark:hover:bg-gray-500">
-              <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                <FileText className="w-10 h-10 mb-3 text-gray-400" />
-                <p className="mb-2 text-sm text-gray-500">
-                  <span className="font-semibold">Click to upload</span> or drag and drop
-                </p>
-                <p className="text-xs text-gray-500">PDF files only</p>
-              </div>
-              <input
-                id="fileInput"
-                type="file"
-                className="hidden"
-                accept=".pdf"
-                onChange={uploadToOpenAI}
-              />
-            </label>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            {uploadedFile ? (
+              <p className="flex flex-col items-center justify-center w-full px-4 transition">
+                File Uploaded Successfully: {fileItem?.id}
+              </p>
+            ) : (
+              <>
+                {!uploadedFile && uploadingFile ? (
+                  <div className="flex flex-col items-center justify-center w-full h-40 bg-white rounded-lg">
+                    <div className="w-12 h-12 mb-4 border-t-4 border-blue-500 border-solid rounded-full animate-spin"></div>
+                    <p className="text-sm font-medium text-gray-600">Uploading file...</p>
+                  </div>
+                ) : (
+                  <label className="flex flex-col items-center justify-center w-full h-40 px-4 transition bg-white border-2 border-gray-300 border-dashed rounded-lg cursor-pointer hover:border-gray-400 hover:bg-gray-50">
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <FileText className="w-10 h-10 mb-3 text-gray-400" />
+                      <p className="mb-2 text-sm text-gray-500">
+                        <span className="font-semibold">Click to upload</span> or drag and drop
+                      </p>
+                      <p className="text-xs text-gray-500">PDF files only</p>
+                    </div>
+                    <input
+                      id="fileInput"
+                      type="file"
+                      className="hidden"
+                      accept=".pdf"
+                      onChange={uploadToOpenAI}
+                    />
+                  </label>
+                )}
+              </>
+            )}
+            <form onSubmit={handleSubmit} className="space-y-4" hidden={!uploadedFile}>
               <div>
                 <label htmlFor="title" className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Title</label>
                 <input
