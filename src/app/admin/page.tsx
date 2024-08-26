@@ -182,7 +182,7 @@ const AIAgendaDashboard: React.FC = () => {
         // setError(err.message);
       }
     }
-    getThreadResponse();
+    // getThreadResponse();
   }, []);
 
 
