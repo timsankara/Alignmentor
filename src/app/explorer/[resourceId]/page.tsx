@@ -104,7 +104,7 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
   const [aiResponses, setAiResponses] = useState<{ role: 'user' | 'ai', content: string }[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [scale, setScale] = useState(SpecialZoomLevel.PageFit);
   const [showAiPanel, setShowAiPanel] = useState(false);
