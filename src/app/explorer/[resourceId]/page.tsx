@@ -19,6 +19,84 @@ interface ExplorerPageProps {
   params: { resourceId: string };
 }
 
+const AILoader: React.FC = () => {
+  return (
+    <div className="flex flex-col items-center justify-center h-screen bg-white dark:bg-gray-900">
+      <motion.div
+        className="relative w-24 h-24"
+        animate={{
+          rotate: 360,
+        }}
+        transition={{
+          duration: 1.5,
+          repeat: Infinity,
+          ease: "linear"
+        }}
+      >
+        <motion.div
+          className="absolute inset-0 rounded-full"
+          style={{
+            border: '2px solid rgba(0, 0, 0, 0.1)',
+            borderTopColor: '#007AFF',
+            borderLeftColor: '#007AFF',
+          }}
+          animate={{
+            rotate: 360,
+          }}
+          transition={{
+            duration: 1,
+            repeat: Infinity,
+            ease: "linear"
+          }}
+        />
+        <motion.div
+          className="absolute inset-2 rounded-full"
+          style={{
+            border: '2px solid rgba(0, 0, 0, 0.1)',
+            borderTopColor: '#FF9500',
+            borderLeftColor: '#FF9500',
+          }}
+          animate={{
+            rotate: -360,
+          }}
+          transition={{
+            duration: 1.5,
+            repeat: Infinity,
+            ease: "linear"
+          }}
+        />
+        <motion.div
+          className="absolute inset-4 rounded-full bg-white dark:bg-gray-900"
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{
+            duration: 0.5,
+            repeat: Infinity,
+            repeatType: "reverse",
+            ease: "easeInOut"
+          }}
+        />
+      </motion.div>
+      <motion.h2
+        className="mt-8 text-2xl font-light text-gray-800 dark:text-gray-200"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+      >
+        Loading AI Paper
+      </motion.h2>
+      <motion.p
+        className="mt-2 text-sm text-gray-500 dark:text-gray-400"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5, delay: 0.4 }}
+      >
+        Please hold on as we start your session
+      </motion.p>
+    </div>
+  );
+};
+
 const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
   const [pdfUrl, setPdfUrl] = useState('');
   const [paperTitle, setPaperTitle] = useState('');
@@ -108,11 +186,7 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-screen bg-white dark:bg-gray-900">
-        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
-    );
+    return <AILoader />;
   }
 
   return (
