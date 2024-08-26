@@ -155,7 +155,7 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-white dark:bg-gray-800 p-2 rounded-full shadow-lg flex items-center space-x-4"
+            className="absolute bottom-4 left-0 right-0 mx-auto w-max bg-white dark:bg-gray-800 p-2 rounded-full shadow-lg flex items-center space-x-4"
           >
             <motion.button
               whileHover={{ scale: 1.1 }}
