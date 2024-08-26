@@ -7,6 +7,8 @@ import { createFeedItem } from '../utils/feed';
 import { v4 as uuid } from 'uuid'
 // import fs from "fs";
 import OpenAI from "openai";
+import { AssistantStream } from "openai/lib/AssistantStream";
+import { AssistantStreamEvent } from "openai/resources/beta/assistants/assistants";
 
 const AIAgendas = [
   "Scalable Oversight",
@@ -18,7 +20,7 @@ const AIAgendas = [
 ];
 
 interface FeedItem {
-  id: string;
+  id: string | undefined;
   title: string;
   description: string;
   agenda: string;
@@ -127,6 +129,64 @@ const AIAgendaDashboard: React.FC = () => {
     fetchFeedItems();
   }, []);
 
+  useEffect(() => {
+    async function getThreadResponse() {
+      try {
+        // Create a thread with the initial message
+        const thread = await openai.beta.threads.create({
+          messages: [
+            {
+              role: "user",
+              content: "Explain how KAN's work?",
+              attachments: [
+                {
+                  file_id: "file-sXuh6CF8oUAuMbFYoxLJ0tfW",
+                  tools: [{ type: "file_search" }]
+                }
+              ]
+            }
+          ]
+        });
+
+        // Create and start a run
+        const run = await openai.beta.threads.runs.create(thread.id, {
+          assistant_id: "asst_mWViXAv7irEltBwI5TMiDZ2x",
+        });
+
+        // Poll for the run to complete
+        let runStatus;
+        do {
+          runStatus = await openai.beta.threads.runs.retrieve(thread.id, run.id);
+          await new Promise(resolve => setTimeout(resolve, 1000)); // Wait for 1 second before polling again
+        } while (runStatus.status !== 'completed' && runStatus.status !== 'failed');
+
+        if (runStatus.status === 'failed') {
+          throw new Error('Run failed: ' + runStatus.last_error?.message);
+        }
+
+        // Retrieve the messages
+        const messages = await openai.beta.threads.messages.list(thread.id);
+
+        // Get the last message from the assistant
+        const lastMessage = messages.data.find(message => message.role === 'assistant');
+        if (lastMessage && lastMessage.content[0].type === 'text') {
+          // setResponse(lastMessage.content[0].text.value);
+          console.log(lastMessage.content[0].text.value);
+
+        } else {
+          // setResponse('No response from the assistant.');
+          console.log('No response from assistant');
+        }
+      } catch (err) {
+        console.error('Error:', err);
+        // setError(err.message);
+      }
+    }
+    getThreadResponse();
+  }, []);
+
+
+
   const toggleDarkMode = () => {
     setDarkMode(!darkMode);
   };
@@ -187,7 +247,7 @@ const AIAgendaDashboard: React.FC = () => {
     e.preventDefault();
     const item: FeedItem = {
       ...newItem,
-      id: uuidv4(),
+      id: fileItem?.id,
       date: new Date().toISOString().split('T')[0],
     };
     try {
