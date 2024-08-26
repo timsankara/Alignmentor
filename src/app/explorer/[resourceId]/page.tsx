@@ -241,7 +241,7 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
               <ArrowLeft size={20} />
             </motion.button>
             <span className="text-gray-800 dark:text-gray-200 font-medium">
-              {currentPage} / {totalPages}
+              {currentPage + 1} / {totalPages}
             </span>
             <motion.button
               whileHover={{ scale: 1.1 }}
