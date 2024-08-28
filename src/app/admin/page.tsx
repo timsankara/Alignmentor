@@ -13,10 +13,11 @@ import { AssistantStreamEvent } from "openai/resources/beta/assistants/assistant
 const AIAgendas = [
   "Scalable Oversight",
   "AI Alignment",
-  "Robustness",
+  "Robustness, Unlearning and Control",
   "Transparency",
   "Value Learning",
   "AI Governance",
+  "Reinforcement Learning from Human (or AI) Feedback"
 ];
 
 interface FeedItem {
