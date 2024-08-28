@@ -39,7 +39,7 @@ const LandingPage: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4, duration: 0.8 }}
           >
-            Master AI Safety 10x Faster with RAG Technology
+            Understand AI Safety Through Secure, Ethical Learning Technology
           </motion.p>
           <motion.div
             className="flex flex-col md:flex-row justify-center items-center space-y-4 md:space-y-0 md:space-x-6 mb-12"
@@ -47,7 +47,7 @@ const LandingPage: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6, duration: 0.8 }}
           >
-            {['Learn Faster', 'Contribute Globally', 'Shape the Future'].map((benefit, index) => (
+            {['Learn Safely', 'Explore Ethically', 'Shape the Future'].map((benefit, index) => (
               <motion.div
                 key={benefit}
                 className="bg-white bg-opacity-80 backdrop-filter backdrop-blur-lg rounded-full px-6 py-2 shadow-lg"
@@ -63,13 +63,13 @@ const LandingPage: React.FC = () => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            Start Your Journey
+            Start Your Safe AI Journey
           </motion.button>
         </motion.div>
         <motion.div
           className="absolute inset-0 z-0"
           style={{
-            backgroundImage: "url('/path/to/abstract-ai-image.jpg')",
+            backgroundImage: "url('/path/to/abstract-ai-safety-image.jpg')",
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             opacity: 0.1,
@@ -84,7 +84,7 @@ const LandingPage: React.FC = () => {
       {/* Feature Section */}
       <section className="py-20 px-4">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-4xl md:text-5xl font-bold text-center mb-16">Revolutionizing AI Safety Education</h2>
+          <h2 className="text-4xl md:text-5xl font-bold text-center mb-16">Secure AI Safety Education</h2>
           <div className="grid md:grid-cols-3 gap-12">
             {features.map((feature, index) => (
               <FeatureCard key={index} {...feature} />
@@ -96,8 +96,8 @@ const LandingPage: React.FC = () => {
       {/* RAG Technology Section */}
       <RAGSection />
 
-      {/* Testimonial Section */}
-      <TestimonialSection />
+      {/* Paper Categories Section */}
+      <PaperCategoriesSection />
 
       {/* CTA Section */}
       <CTASection />
@@ -107,7 +107,7 @@ const LandingPage: React.FC = () => {
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center">
           <div className="mb-8 md:mb-0">
             <h3 className="text-2xl font-bold">Alignmentor</h3>
-            <p className="text-gray-600">Empowering AI Safety Education</p>
+            <p className="text-gray-600">Empowering Safe AI Education</p>
           </div>
           <div className="flex space-x-6">
             {['Terms', 'Privacy', 'Contact'].map((item) => (
@@ -124,19 +124,19 @@ const LandingPage: React.FC = () => {
 
 const features = [
   {
-    title: "Adaptive Learning",
-    description: "Our AI-powered platform tailors the curriculum to your pace and style, optimizing your learning journey.",
-    icon: "🧠",
+    title: "Secure Learning",
+    description: "Our platform ensures your learning journey is safe and ethical, prioritizing responsible AI practices.",
+    icon: "🔒",
   },
   {
-    title: "Real-world Impact",
-    description: "Apply your knowledge to current AI safety challenges, contributing to global initiatives.",
-    icon: "🌍",
+    title: "Cutting-edge Content",
+    description: "Stay updated with the latest developments in AI safety, curated by experts in the field.",
+    icon: "📚",
   },
   {
-    title: "Expert Network",
-    description: "Connect with leading AI researchers and peers, fostering collaboration and growth.",
-    icon: "👥",
+    title: "Ethical Exploration",
+    description: "Engage with AI concepts hands-on, using secure sandboxes and ethical testing environments.",
+    icon: "🧪",
   },
 ];
 
@@ -191,7 +191,7 @@ const RAGSection: React.FC = () => {
           transition={{ duration: 0.5 }}
           className="text-4xl md:text-5xl font-bold mb-8"
         >
-          Powered by RAG Technology
+          Powered by Secure RAG Technology
         </motion.h2>
         <motion.p
           initial={{ opacity: 0, y: 20 }}
@@ -199,23 +199,15 @@ const RAGSection: React.FC = () => {
           transition={{ duration: 0.5, delay: 0.2 }}
           className="text-xl mb-12"
         >
-          Experience 10x faster learning with our Retrieval-Augmented Generation system,
-          delivering hyper-personalized AI safety education.
+          Experience enhanced learning with our Retrieval-Augmented Generation system,
+          delivering personalized AI safety education while maintaining the highest standards of data security and ethical AI use.
         </motion.p>
-        <motion.img
-          src="/path/to/rag-illustration.png"
-          alt="RAG Technology Illustration"
-          className="w-full max-w-2xl mx-auto rounded-lg shadow-2xl"
-          initial={{ opacity: 0, y: 20 }}
-          animate={controls}
-          transition={{ duration: 0.8, delay: 0.4 }}
-        />
       </div>
     </section>
   );
 };
 
-const TestimonialSection: React.FC = () => {
+const PaperCategoriesSection: React.FC = () => {
   const controls = useAnimation();
   const [ref, inView] = useInView({
     triggerOnce: true,
@@ -228,28 +220,85 @@ const TestimonialSection: React.FC = () => {
     }
   }, [controls, inView]);
 
+  const categories = [
+    {
+      title: "Reinforcement Learning from Human (or AI) Feedback",
+      description: "Explore how AI systems learn from interaction, ensuring alignment with human values.",
+    },
+    {
+      title: "Scalable Oversight",
+      description: "Discover methods to maintain control and understanding as AI systems grow more complex.",
+    },
+    {
+      title: "Robustness, Unlearning and Control",
+      description: "Learn techniques to create reliable AI systems that can adapt safely to new situations.",
+    },
+    {
+      title: "Mechanistic Interpretability",
+      description: "Uncover the inner workings of AI models to ensure transparency and trustworthiness.",
+    },
+    {
+      title: "Technical Governance Approaches",
+      description: "Explore frameworks for responsible development and deployment of AI technologies.",
+    },
+    {
+      title: "AI Alignment Theory",
+      description: "Dive into fundamental principles for creating AI systems that robustly pursue intended goals.",
+    },
+    {
+      title: "Value Learning and Specification",
+      description: "Study methods for AI systems to understand and adhere to human values and preferences.",
+    },
+    {
+      title: "AI Containment and Cybersecurity",
+      description: "Investigate strategies to ensure AI systems remain secure and within intended operational bounds.",
+    },
+    {
+      title: "Cooperative AI and Multi-Agent Systems",
+      description: "Explore how multiple AI agents can work together safely and effectively.",
+    }
+  ];
+
   return (
     <section ref={ref} className="py-20 px-4 bg-white">
-      <div className="max-w-4xl mx-auto text-center">
+      <div className="max-w-6xl mx-auto">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
           animate={controls}
           transition={{ duration: 0.5 }}
-          className="text-4xl md:text-5xl font-bold mb-12"
+          className="text-4xl md:text-5xl font-bold text-center mb-16"
         >
-          What Our Users Say
+          Explore Key AI Safety Topics
         </motion.h2>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={controls}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="bg-gray-100 p-8 rounded-3xl shadow-lg"
+          className="grid md:grid-cols-3 gap-8"
         >
-          <p className="text-xl italic mb-4">
-            "Alignmentor has revolutionized my understanding of AI safety. The personalized learning experience is unmatched."
-          </p>
-          <p className="font-semibold">- Dr. Jane Smith, AI Researcher</p>
+          {categories.map((category, index) => (
+            <motion.div
+              key={index}
+              className="bg-gray-50 rounded-3xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300"
+              whileHover={{ y: -5 }}
+            >
+              <div className="h-2 bg-gradient-to-r from-blue-500 to-purple-500" />
+              <div className="p-6">
+                <h3 className="text-lg font-semibold mb-2 leading-tight">{category.title}</h3>
+                <p className="text-sm text-gray-600">{category.description}</p>
+              </div>
+            </motion.div>
+          ))}
         </motion.div>
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={controls}
+          transition={{ duration: 0.5, delay: 0.4 }}
+          className="text-center mt-16 text-lg text-gray-700"
+        >
+          We continuously update our content to reflect the latest advancements in AI safety research.
+          Soon, you'll be able to replicate paper results and contribute your own research!
+        </motion.p>
       </div>
     </section>
   );
@@ -277,7 +326,7 @@ const CTASection: React.FC = () => {
           transition={{ duration: 0.5 }}
           className="text-4xl md:text-5xl font-bold mb-8"
         >
-          Ready to Shape the Future of AI?
+          Join the Safe AI Revolution
         </motion.h2>
         <motion.p
           initial={{ opacity: 0, y: 20 }}
@@ -285,8 +334,8 @@ const CTASection: React.FC = () => {
           transition={{ duration: 0.5, delay: 0.2 }}
           className="text-xl mb-12"
         >
-          Join Alignmentor today and be at the forefront of AI safety innovation.
-          Start learning 10x faster and make a global impact.
+          Embark on a secure journey to understand and shape the future of AI safety.
+          Learn, explore, and contribute ethically.
         </motion.p>
         <motion.button
           initial={{ opacity: 0, y: 20 }}
@@ -296,7 +345,7 @@ const CTASection: React.FC = () => {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
-          Begin Your Journey
+          Start Your Ethical AI Journey
         </motion.button>
       </div>
     </section>
