@@ -7,8 +7,8 @@ import { createFeedItem } from '../utils/feed';
 import { v4 as uuid } from 'uuid'
 // import fs from "fs";
 import OpenAI from "openai";
-import { AssistantStream } from "openai/lib/AssistantStream";
-import { AssistantStreamEvent } from "openai/resources/beta/assistants/assistants";
+// import { AssistantStream } from "openai/lib/AssistantStream";
+// import { AssistantStreamEvent } from "openai/resources/beta/assistants/assistants";
 
 const AIAgendas = [
   "Scalable Oversight",
