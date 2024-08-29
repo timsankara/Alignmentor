@@ -5,14 +5,134 @@ import React, { useState, useEffect } from 'react';
 import { motion, useAnimation } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 
+const privacyPolicy = `
+Privacy Policy for Alignmentor
+
+Last updated: 29-Aug-2024
+
+1. Introduction
+   Alignmentor is committed to protecting your privacy. This policy explains how we collect, use, and safeguard your information when you use our website and services.
+
+2. Information We Collect
+   - Usage data: Clicks, page views, and your journey through the website.
+   - Technical data: IP address, browser type, and device information.
+
+3. How We Use Your Information
+   We use the collected information solely to:
+   - Improve our website's functionality and user experience.
+   - Analyze user behavior to enhance our services.
+   - Ensure the security and proper operation of our platform.
+
+4. What We Don't Collect or Track
+   - We do not track your activities outside our website.
+   - We do not collect personal information beyond what's necessary for site functionality.
+   - We do not use cookies for advertising purposes.
+
+5. Data Security
+   We implement industry-standard security measures to protect your information from unauthorized access, alteration, disclosure, or destruction.
+
+6. Your Rights
+   You have the right to:
+   - Access the data we hold about you.
+   - Request deletion of your data.
+   - Opt-out of non-essential data collection.
+
+7. Changes to This Policy
+   We may update this policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page.
+
+8. Contact Us
+   If you have any questions about this Privacy Policy, please contact us at tim@rookih.com.
+
+By using Alignmentor, you agree to the collection and use of information in accordance with this policy.
+  `;
+
+const termsOfService = `
+Terms of Service for Alignmentor
+
+Last updated: 29-Aug-2024
+
+1. Acceptance of Terms
+   By accessing or using Alignmentor ("the Service"), you agree to comply with and be bound by these Terms of Service.
+
+2. Use of the Service
+   2.1 Permitted Use
+   You may use Alignmentor to:
+   - Access and learn from AI safety content.
+   - Participate in secure, ethical learning experiences.
+   - Engage in discussions related to AI safety.
+
+   2.2 Prohibited Actions
+   You agree not to:
+   - Attempt to bypass or compromise the Service's security measures.
+   - Use the Service for any illegal activities.
+   - Share or distribute content from the Service without permission.
+   - Interfere with or disrupt the integrity of the Service.
+   - Impersonate other users or entities.
+
+3. Intellectual Property
+   All content provided on Alignmentor is the property of Alignmentor or its licensors and is protected by copyright and other intellectual property laws.
+
+4. User Contributions
+   You may have the opportunity to contribute content or participate in discussions. You retain ownership of your contributions, but grant Alignmentor a license to use, modify, and display such contributions.
+
+5. Disclaimer of Warranties
+   The Service is provided "as is" without any warranties, express or implied.
+
+6. Limitation of Liability
+   Alignmentor shall not be liable for any indirect, incidental, special, consequential, or punitive damages resulting from your use of the Service.
+
+7. Changes to Terms
+   We reserve the right to modify these Terms at any time. Your continued use of the Service after such changes constitutes acceptance of the new Terms.
+
+8. Governing Law
+   These Terms shall be governed by and construed in accordance with the laws of [Your Jurisdiction].
+
+9. Contact Information
+   If you have any questions about these Terms, please contact us at tim@rookih.com.
+
+By using Alignmentor, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service.
+  `;
+
+const acknowledgement = `
+  We would like to express our deepest gratitude to all the authors who have contributed to the AI safety literature. Your tireless efforts, groundbreaking research, and invaluable insights have been instrumental in shaping our understanding of AI safety and its critical importance for humanity's future.
+
+  We also extend our sincere appreciation to arXiv (arxiv.org) for providing an open-access platform that has facilitated the rapid dissemination of research papers in the field of AI safety. arXiv's role in making cutting-edge research freely available has been crucial in accelerating progress and fostering collaboration within the AI safety community.
+
+  Some key contributors to the field include, but are not limited to:
+  • Stuart Russell
+  • Nick Bostrom
+  • Eliezer Yudkowsky
+  • Paul Christiano
+  • Toby Ord
+  • Dario Amodei
+  • Chris Olah
+  • OpenAI researchers
+  • DeepMind's safety team
+  • And many more brilliant minds working tirelessly on this crucial challenge
+
+  We stand on the shoulders of giants, and it is through their work that we are able to continue advancing the field of AI safety. Thank you all for your dedication to ensuring a beneficial future with AI.
+    `;
+
+
 const LandingPage: React.FC = () => {
   const [scrollY, setScrollY] = useState(0);
+  const [modalContent, setModalContent] = useState<string | null>(null);
+  const [modalTitle, setModalTitle] = useState<string>('');
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const openModal = (content: string, title: string) => {
+    setModalContent(content);
+    setModalTitle(title);
+  };
+
+  const closeModal = () => {
+    setModalContent(null);
+  };
 
   return (
     <div className="bg-white text-gray-900 min-h-screen">
@@ -111,14 +231,51 @@ const LandingPage: React.FC = () => {
             <p className="text-gray-600">Empowering Safe AI Education</p>
           </div>
           <div className="flex space-x-6">
-            {['Terms', 'Privacy', 'Contact'].map((item) => (
-              <a key={item} href="#" className="text-gray-600 hover:text-black transition-colors duration-300">
-                {item}
-              </a>
-            ))}
+            <button
+              onClick={() => openModal(termsOfService, 'Terms of Service')}
+              className="text-gray-600 hover:text-black transition-colors duration-300"
+            >
+              Terms
+            </button>
+            <button
+              onClick={() => openModal(privacyPolicy, 'Privacy Policy')}
+              className="text-gray-600 hover:text-black transition-colors duration-300"
+            >
+              Privacy
+            </button>
+            <a href="#" className="text-gray-600 hover:text-black transition-colors duration-300"
+              onClick={() => window.location.href = "mailto:tim@rookih.com?subject=Contact%20from%20Alignmentor"}
+            >
+              Contact
+            </a>
+            <button
+              onClick={() => openModal(acknowledgement, "Acknowledgements")}
+              className="text-gray-600 hover:text-black transition-colors duration-300"
+            >
+              Acknowledgements
+            </button>
           </div>
         </div>
       </footer>
+
+      {modalContent && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ y: 50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 50, opacity: 0 }}
+            className="bg-white rounded-lg p-8 max-w-2xl w-full max-h-[80vh] overflow-y-auto"
+          >
+            <pre className="whitespace-pre-wrap font-sans">{modalContent}</pre>
+            <button
+              className="mt-6 bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors duration-300"
+              onClick={closeModal}
+            >
+              Close
+            </button>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 };
