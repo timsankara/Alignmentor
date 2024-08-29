@@ -62,6 +62,7 @@ const LandingPage: React.FC = () => {
             className="bg-black text-white px-8 py-4 rounded-full text-lg font-medium hover:bg-gray-900 transition-colors duration-300"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
+            onClick={() => window.location.href = "/alignmentor"}
           >
             Start Your Safe AI Journey
           </motion.button>
@@ -344,6 +345,7 @@ const CTASection: React.FC = () => {
           className="bg-white text-black px-10 py-5 rounded-full text-xl font-medium hover:bg-gray-200 transition-colors duration-300"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
+          onClick={() => window.location.href = "/alignmentor"}
         >
           Start Your Ethical AI Journey
         </motion.button>
