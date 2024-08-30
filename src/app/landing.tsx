@@ -85,7 +85,7 @@ Last updated: 29-Aug-2024
    We reserve the right to modify these Terms at any time. Your continued use of the Service after such changes constitutes acceptance of the new Terms.
 
 8. Governing Law
-   These Terms shall be governed by and construed in accordance with the laws of [Your Jurisdiction].
+   These Terms shall be governed by and construed in accordance with the laws of The United States Of America.
 
 9. Contact Information
    If you have any questions about these Terms, please contact us at tim@rookih.com.
