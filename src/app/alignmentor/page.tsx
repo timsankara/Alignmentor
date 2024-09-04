@@ -101,7 +101,7 @@ const FuturisticLoader: React.FC = () => (
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5, delay: 0.5 }}
     >
-      Exploring AI Safety Knowledge...
+      Loading AI Safety Content...
     </motion.p>
   </div>
 );
