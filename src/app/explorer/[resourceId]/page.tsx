@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, ArrowLeft, ArrowRight, ZoomIn, ZoomOut, Moon, Sun, MessageCircle, X, Send, HelpCircle, BookOpen } from 'lucide-react';
+import { Search, ArrowLeft, ArrowRight, ZoomIn, ZoomOut, Moon, Sun, MessageCircle, X, Send, HelpCircle, BookOpen, User, Bot } from 'lucide-react';
 import { DynamoDB } from 'aws-sdk';
 import { Viewer, SpecialZoomLevel } from '@react-pdf-viewer/core';
 import { pageNavigationPlugin } from '@react-pdf-viewer/page-navigation';
@@ -330,43 +330,127 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
     return <AILoader />;
   }
 
-  const MathMarkdownResponse = ({ response, darkMode }) => {
+  const ChatBubble = ({ response, darkMode, isLoading }) => {
+    const isUser = response.role === 'user';
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-        className={`p-3 rounded-lg ${response.role === 'user'
-            ? darkMode
-              ? 'bg-blue-900 ml-8'
-              : 'bg-blue-100 ml-8'
-            : darkMode
-              ? 'bg-gray-700 mr-8'
-              : 'bg-gray-100 mr-8'
-          }`}
+        transition={{ duration: 0.3, ease: "easeOut" }}
+        className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}
       >
-        <div
-          className={`text-sm ${response.role === 'user'
-              ? darkMode
-                ? 'text-blue-200'
-                : 'text-blue-800'
-              : darkMode
-                ? 'text-gray-200'
-                : 'text-gray-800'
-            }`}
-        >
-          <ReactMarkdown
-            remarkPlugins={[remarkMath]}
-            rehypePlugins={[rehypeKatex]}
-            components={{
-              p: ({ node, ...props }) => <p className="mb-4" {...props} />,
-              h3: ({ node, ...props }) => <h3 className="text-lg font-semibold mb-2 mt-4" {...props} />,
-            }}
+        <div className={`flex ${isUser ? 'flex-row-reverse' : 'flex-row'} items-end`}>
+          <div className={`flex-shrink-0 ${isUser ? 'ml-3' : 'mr-3'}`}>
+            {isUser ? (
+              <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
+                <User size={16} className="text-white" />
+              </div>
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-gray-300 dark:bg-gray-700 flex items-center justify-center">
+                <Bot size={16} className="text-gray-600 dark:text-gray-300" />
+              </div>
+            )}
+          </div>
+          <div
+            className={`px-4 py-3 rounded-2xl max-w-xs sm:max-w-md md:max-w-lg lg:max-w-xl ${isUser
+                ? 'bg-blue-500 text-white'
+                : darkMode
+                  ? 'bg-gray-700 text-gray-200'
+                  : 'bg-white text-gray-800 shadow-md'
+              }`}
           >
-            {response.content}
-          </ReactMarkdown>
+            {isLoading ? (
+              <DynamicLoader darkMode={darkMode} />
+            ) : (
+              <ReactMarkdown
+                remarkPlugins={[remarkMath]}
+                rehypePlugins={[rehypeKatex]}
+                components={{
+                  p: ({ node, ...props }) => <p className="mb-2 last:mb-0" {...props} />,
+                  h3: ({ node, ...props }) => <h3 className="text-lg font-semibold mb-2 mt-3" {...props} />,
+                  code: ({ node, inline, ...props }) => (
+                    <code
+                      className={`${inline ? 'inline-code' : 'block-code'} ${isUser
+                          ? 'bg-blue-600'
+                          : darkMode
+                            ? 'bg-gray-600'
+                            : 'bg-gray-100'
+                        } px-1 rounded`}
+                      {...props}
+                    />
+                  ),
+                  pre: ({ node, ...props }) => (
+                    <pre className="overflow-x-auto my-2 p-2 rounded bg-opacity-50 bg-black" {...props} />
+                  ),
+                }}
+              >
+                {response.content}
+              </ReactMarkdown>
+            )}
+          </div>
         </div>
       </motion.div>
+    );
+  };
+
+  const DynamicLoader = ({ darkMode }) => {
+    const [complexity, setComplexity] = useState(0);
+
+    useEffect(() => {
+      const timer = setTimeout(() => {
+        setComplexity((prev) => (prev < 2 ? prev + 1 : prev));
+      }, 5000); // Increase complexity every 5 seconds
+
+      return () => clearTimeout(timer);
+    }, [complexity]);
+
+    const dotVariants = {
+      initial: { scale: 0.8, opacity: 0.7 },
+      animate: { scale: 1, opacity: 1 },
+    };
+
+    const containerVariants = {
+      initial: { rotate: 0 },
+      animate: { rotate: 360 },
+    };
+
+    return (
+      <div className="flex items-center space-x-2">
+        <motion.div
+          variants={containerVariants}
+          initial="initial"
+          animate="animate"
+          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+          className="flex items-center justify-center w-12 h-6"
+        >
+          {[...Array(3 + complexity)].map((_, index) => (
+            <motion.div
+              key={index}
+              variants={dotVariants}
+              initial="initial"
+              animate="animate"
+              transition={{
+                repeat: Infinity,
+                repeatType: "reverse",
+                duration: 0.5,
+                delay: index * 0.15,
+              }}
+              className={`w-1.5 h-1.5 mx-0.5 rounded-full ${darkMode ? 'bg-gray-400' : 'bg-gray-600'
+                }`}
+            />
+          ))}
+        </motion.div>
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="text-sm"
+        >
+          {complexity === 0 && "AI is thinking..."}
+          {complexity === 1 && "Still processing..."}
+          {complexity === 2 && "This might take a moment..."}
+        </motion.p>
+      </div>
     );
   };
 
@@ -497,7 +581,7 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: '100%', opacity: 0 }}
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              className={`w-96 border-l-2 ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-2xl flex flex-col`}
+              className={`w-1/2 border-l-2 ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-2xl flex flex-col`}
             >
               <div className={`p-4 ${darkMode ? 'border-gray-700' : 'border-gray-200'} border-b flex justify-between items-center`}>
                 <h2 className="text-xl font-bold">Paper AI Assistant</h2>
@@ -517,8 +601,20 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
                   </div>
                 )}
                 {aiResponses.map((response, index) => (
-                  <MathMarkdownResponse key={index} response={response} darkMode={darkMode} />
+                  <ChatBubble
+                    key={index}
+                    response={response}
+                    darkMode={darkMode}
+                    isLoading={isLoading && index === aiResponses.length - 1 && response.role === 'ai'}
+                  />
                 ))}
+                {isLoadingAiResponse && aiResponses[aiResponses.length - 1]?.role === 'user' && (
+                  <ChatBubble
+                    response={{ role: 'ai', content: '' }}
+                    darkMode={darkMode}
+                    isLoading={true}
+                  />
+                )}
 
               </div>
               <div className={`p-4 ${darkMode ? 'border-gray-700' : 'border-gray-200'} border-t`}>
