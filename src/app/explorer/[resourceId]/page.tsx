@@ -15,7 +15,7 @@ import '@react-pdf-viewer/core/lib/styles/index.css';
 import '@react-pdf-viewer/page-navigation/lib/styles/index.css';
 import '@react-pdf-viewer/zoom/lib/styles/index.css';
 import 'katex/dist/katex.min.css';
-import { InlineMath, BlockMath } from 'react-katex';
+// import { InlineMath, BlockMath } from 'react-katex';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
@@ -297,14 +297,30 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
       // Get the last message from the assistant
       const lastMessage = messages.data.find(message => message.role === 'assistant');
 
-      if (lastMessage && lastMessage.content[0].type === 'text') {
-        setAiResponses(prev => [...prev, { role: 'ai', content: lastMessage.content[0].text.value }]);
+      if (lastMessage) {
+        let responseContent = '';
+        for (const contentBlock of lastMessage.content) {
+          if (contentBlock.type === 'text') {
+            responseContent += contentBlock.text.value;
+          } else if (contentBlock.type === 'image_file') {
+            // Handle image file if needed
+            responseContent += '[Image]';
+          }
+          // Add handling for other content types if necessary
+        }
+        setAiResponses(prev => [...prev, { role: 'ai', content: responseContent }]);
       } else {
         setAiResponses(prev => [...prev, { role: 'ai', content: 'No response from the assistant.' }]);
       }
-    } catch (err) {
-      console.error('Error:', err);
-      setAiResponses(prev => [...prev, { role: 'ai', content: `Error: ${err.message}` }]);
+    } catch (error: unknown) {
+      console.error('Error:', error);
+      let errorMessage = 'An unknown error occurred';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+      setAiResponses(prev => [...prev, { role: 'ai', content: `Error: ${errorMessage}` }]);
     } finally {
       setIsLoadingAiResponse(false);
     }
@@ -330,7 +346,37 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
     return <AILoader />;
   }
 
-  const ChatBubble = ({ response, darkMode, isLoading }) => {
+  // Define types
+  type ResponseRole = 'user' | 'ai';
+
+  interface ChatResponse {
+    role: ResponseRole;
+    content: string;
+  }
+
+  interface ChatBubbleProps {
+    response: ChatResponse;
+    darkMode: boolean;
+    isLoading: boolean;
+  }
+
+  interface MathMarkdownResponseListProps {
+    aiResponses: ChatResponse[];
+    darkMode: boolean;
+    isLoading: boolean;
+  }
+
+  const CodeBlock: React.FC<{ value: string; language: string | undefined }> = ({ value, language }) => {
+    return (
+      <pre className="overflow-x-auto my-2 p-3 rounded-lg bg-gray-100 dark:bg-gray-800 text-sm">
+        <code className={language ? `language-${language}` : ''}>
+          {value}
+        </code>
+      </pre>
+    );
+  };
+
+  const ChatBubble: React.FC<ChatBubbleProps> = ({ response, darkMode, isLoading }) => {
     const isUser = response.role === 'user';
     return (
       <motion.div
@@ -339,24 +385,24 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
         transition={{ duration: 0.3, ease: "easeOut" }}
         className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}
       >
-        <div className={`flex ${isUser ? 'flex-row-reverse' : 'flex-row'} items-end`}>
+        <div className={`flex ${isUser ? 'flex-row-reverse' : 'flex-row'} items-end max-w-[85%]`}>
           <div className={`flex-shrink-0 ${isUser ? 'ml-3' : 'mr-3'}`}>
             {isUser ? (
-              <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center shadow-md">
                 <User size={16} className="text-white" />
               </div>
             ) : (
-              <div className="w-8 h-8 rounded-full bg-gray-300 dark:bg-gray-700 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center shadow-md">
                 <Bot size={16} className="text-gray-600 dark:text-gray-300" />
               </div>
             )}
           </div>
           <div
-            className={`px-4 py-3 rounded-2xl max-w-xs sm:max-w-md md:max-w-lg lg:max-w-xl ${isUser
-                ? 'bg-blue-500 text-white'
-                : darkMode
-                  ? 'bg-gray-700 text-gray-200'
-                  : 'bg-white text-gray-800 shadow-md'
+            className={`px-4 py-3 rounded-2xl shadow-md ${isUser
+              ? 'bg-blue-900 text-white'
+              : darkMode
+                ? 'bg-gray-700 text-gray-100'
+                : 'bg-gray-200 text-gray-800'
               }`}
           >
             {isLoading ? (
@@ -366,22 +412,17 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
                 remarkPlugins={[remarkMath]}
                 rehypePlugins={[rehypeKatex]}
                 components={{
-                  p: ({ node, ...props }) => <p className="mb-2 last:mb-0" {...props} />,
+                  p: ({ node, ...props }) => <p className="mb-2 last:mb-0 text-base leading-relaxed" {...props} />,
                   h3: ({ node, ...props }) => <h3 className="text-lg font-semibold mb-2 mt-3" {...props} />,
-                  code: ({ node, inline, ...props }) => (
-                    <code
-                      className={`${inline ? 'inline-code' : 'block-code'} ${isUser
-                          ? 'bg-blue-600'
-                          : darkMode
-                            ? 'bg-gray-600'
-                            : 'bg-gray-100'
-                        } px-1 rounded`}
-                      {...props}
-                    />
-                  ),
-                  pre: ({ node, ...props }) => (
-                    <pre className="overflow-x-auto my-2 p-2 rounded bg-opacity-50 bg-black" {...props} />
-                  ),
+                  code: ({ node, className, children, ...props }) => {
+                    const match = /language-(\w+)/.exec(className || '');
+                    const language = match ? match[1] : undefined;
+                    const value = String(children).replace(/\n$/, '');
+                    return <CodeBlock value={value} language={language} />;
+                  },
+                  ul: ({ node, ...props }) => <ul className="list-disc list-inside mb-2" {...props} />,
+                  ol: ({ node, ...props }) => <ol className="list-decimal list-inside mb-2" {...props} />,
+                  li: ({ node, ...props }) => <li className="mb-1" {...props} />,
                 }}
               >
                 {response.content}
@@ -393,7 +434,8 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
     );
   };
 
-  const DynamicLoader = ({ darkMode }) => {
+  const DynamicLoader: React.FC<{ darkMode: boolean }> = ({ darkMode }) => {
+
     const [complexity, setComplexity] = useState(0);
 
     useEffect(() => {
@@ -460,13 +502,6 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
         <h1 className="text-2xl font-bold truncate max-w-2xl">{paperTitle}</h1>
         <div className="flex items-center space-x-4">
           <button
-            onClick={() => handleQuery()}
-            className={`relative flex items-center justify-center p-3 rounded-full text-white transition-all duration-300 ease-in-out shadow-2xl ${showAiPanel ? 'bg-gradient-to-r from-blue-500 to-blue-600' : 'bg-gradient-to-r from-blue-400 to-blue-500'} hover:from-blue-600 hover:to-blue-700 transform hover:scale-105`}
-            style={{ minWidth: '200px' }}
-          >
-            Test
-          </button>
-          <button
             onClick={() => setShowAiPanel(!showAiPanel)}
             className={`relative flex items-center justify-center p-3 rounded-full text-white transition-all duration-300 ease-in-out shadow-2xl ${showAiPanel ? 'bg-gradient-to-r from-blue-500 to-blue-600' : 'bg-gradient-to-r from-blue-400 to-blue-500'} hover:from-blue-600 hover:to-blue-700 transform hover:scale-105`}
             style={{ minWidth: '200px' }}
@@ -494,7 +529,7 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
       <div className="flex-1 flex overflow-hidden">
         <div className="flex-1 relative" ref={pdfContainerRef}>
           <PDFWorker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
-            <div style={{ height: 'calc(100vh - 8rem)' }} className="overflow-auto">
+            <div style={{ height: 'calc(100vh)' }} className="overflow-auto">
               <Viewer
                 fileUrl={pdfUrl}
                 defaultScale={scale}
@@ -581,23 +616,31 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: '100%', opacity: 0 }}
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              className={`w-1/2 border-l-2 ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-2xl flex flex-col`}
+              className={`w-1/2 ${darkMode ? 'bg-gray-900' : 'bg-gray-50'} shadow-2xl flex flex-col`}
+              style={{ height: 'calc(100vh - 4rem)' }}
             >
-              <div className={`p-4 ${darkMode ? 'border-gray-700' : 'border-gray-200'} border-b flex justify-between items-center`}>
-                <h2 className="text-xl font-bold">Paper AI Assistant</h2>
+              <div className={`p-6 ${darkMode ? 'border-gray-700' : 'border-gray-200'} border-b flex justify-between items-center shadow-lg rounded-t-3xl`}>
+
+                <h2 className={`text-3xl font-bold ${darkMode ? 'text-gray-100' : 'text-gray-900'} tracking-tight`}>
+                  Paper AI Assistant
+                </h2>
+
                 <button
                   onClick={() => setShowAiPanel(false)}
-                  className={`p-1 rounded-full ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-200'} transition-colors duration-200`}
+                  className={`p-2 rounded-full ${darkMode ? 'bg-gray-800 hover:bg-gray-700' : 'bg-gray-200 hover:bg-gray-300'} transition-all duration-300 ease-in-out`}
+                  aria-label="Close Panel"
                 >
-                  <X size={24} className={darkMode ? 'text-gray-400' : 'text-gray-600'} />
+                  <X size={24} className={`${darkMode ? 'text-gray-400' : 'text-gray-600'} transform transition-transform duration-200 hover:rotate-45`} />
                 </button>
+
               </div>
-              <div ref={chatContainerRef} className="flex-1 overflow-auto p-4 space-y-4">
+
+              <div ref={chatContainerRef} className="flex-1 overflow-auto p-6 space-y-6" style={{ maxHeight: 'calc(100% - 5rem)' }}>
                 {aiResponses.length === 0 && (
-                  <div className={`text-center ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                    <BookOpen size={48} className="mx-auto mb-2" />
-                    <p className="font-semibold">Welcome to your AI Research Assistant!</p>
-                    <p>I've analyzed this paper using RAG technology. Ask me anything about the content, methodology, or implications.</p>
+                  <div className={`text-center ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    <BookOpen size={48} className="mx-auto mb-4" />
+                    <p className="text-lg font-medium">Welcome to your AI Research Assistant!</p>
+                    <p className="text-sm">I've analyzed this paper using RAG technology. Ask me anything about the content, methodology, or implications.</p>
                   </div>
                 )}
                 {aiResponses.map((response, index) => (
@@ -617,21 +660,23 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
                 )}
 
               </div>
-              <div className={`p-4 ${darkMode ? 'border-gray-700' : 'border-gray-200'} border-t`}>
-                <div className="mb-2">
-                  <p className="text-sm font-semibold mb-1">Suggested prompts:</p>
-                  <div className="flex flex-wrap gap-2">
+
+              <div className={`p-6 ${darkMode ? 'border-gray-700' : 'border-gray-200'} border-t`}>
+                <div className="mb-4">
+                  <p className="text-sm font-semibold mb-2">Suggested prompts:</p>
+                  <div className="flex flex-wrap gap-3">
                     {suggestedPrompts.map((prompt, index) => (
                       <button
                         key={index}
                         onClick={() => setQuery(prompt)}
-                        className={`text-xs px-2 py-1 rounded-full ${darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'} transition-colors duration-200`}
+                        className={`text-xs px-3 py-2 rounded-full ${darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'} transition-colors duration-200`}
                       >
                         {prompt}
                       </button>
                     ))}
                   </div>
                 </div>
+
                 <div className="relative">
                   <textarea
                     ref={aiInputRef}
@@ -644,15 +689,15 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
                       }
                     }}
                     placeholder="Ask about the paper..."
-                    className={`w-full p-3 pr-12 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all resize-none ${darkMode
-                      ? 'bg-gray-700 text-gray-200 border-gray-600'
-                      : 'bg-white text-gray-800 border-gray-300'
+                    className={`w-full p-4 pr-14 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all resize-none ${darkMode
+                      ? 'bg-gray-800 text-gray-200 border-gray-700'
+                      : 'bg-white text-gray-900 border-gray-300'
                       }`}
                     rows={3}
                   />
                   <button
                     onClick={() => handleQuery()}
-                    className="absolute right-2 bottom-2 p-2 mb-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50 transition-all duration-200"
+                    className="absolute right-4 bottom-4 p-3 bg-blue-500 text-white rounded-full hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50 transition-all duration-200"
                   >
                     <Send size={20} />
                   </button>
@@ -660,6 +705,7 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
               </div>
             </motion.div>
           )}
+
         </AnimatePresence>
       </div>
     </div>
