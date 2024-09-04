@@ -206,14 +206,16 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
         <div className="flex items-center space-x-4">
           <button
             onClick={() => setShowAiPanel(!showAiPanel)}
-            className={`p-2 rounded-full ${showAiPanel ? 'bg-blue-600' : 'bg-blue-500'} text-white hover:bg-blue-600 transition-colors duration-200 shadow-lg relative group`}
+            className={`relative flex items-center justify-center p-3 rounded-full text-white transition-all duration-300 ease-in-out shadow-2xl ${showAiPanel ? 'bg-gradient-to-r from-blue-500 to-blue-600' : 'bg-gradient-to-r from-blue-400 to-blue-500'} hover:from-blue-600 hover:to-blue-700 transform hover:scale-105`}
+            style={{ minWidth: '200px' }}
           >
             {!showAiPanel && (
-              <span className="absolute -top-1 -right-1 bg-red-500 rounded-full w-3 h-3"></span>
+              <span className="absolute -top-2 -right-2 bg-red-500 rounded-full w-4 h-4 animate-pulse"></span>
             )}
-            <MessageCircle size={24} />
-            <span className="absolute hidden group-hover:block bottom-full mb-2 left-1/2 transform -translate-x-1/2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap">
-              Toggle AI Assistant
+            <MessageCircle size={18} className="mr-2" />
+            <span className="font-semibold text-lg">AI Assistant</span>
+            <span className="absolute hidden group-hover:block top-full mt-3 left-1/2 transform -translate-x-1/2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-md">
+              Click to Activate AI Assistant
             </span>
           </button>
           <button
@@ -317,10 +319,10 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: '100%', opacity: 0 }}
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              className={`w-96 ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-2xl flex flex-col`}
+              className={`w-96 border-l-2 ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-2xl flex flex-col`}
             >
               <div className={`p-4 ${darkMode ? 'border-gray-700' : 'border-gray-200'} border-b flex justify-between items-center`}>
-                <h2 className="text-xl font-bold">RAG AI Assistant</h2>
+                <h2 className="text-xl font-bold">Paper AI Assistant</h2>
                 <button
                   onClick={() => setShowAiPanel(false)}
                   className={`p-1 rounded-full ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-200'} transition-colors duration-200`}
