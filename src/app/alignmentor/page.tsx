@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, ChevronRight, Sun, Moon, ChevronDown, ChevronUp, BookOpen, FileText, Clock, User, Calendar, AlertTriangle } from 'lucide-react';
 import { DynamoDB } from 'aws-sdk';
+import OpenAI from 'openai'
 
 // Initialize DynamoDB client
 const dynamoDB = new DynamoDB.DocumentClient({
@@ -115,6 +116,11 @@ const AISafetyExplorer: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
+
+  const openai = new OpenAI({
+    apiKey: "sk-proj-avXTs6KIIYIZgQBsuKglT3BlbkFJ7NWO4wHxPaR1e2nvVjti",
+    dangerouslyAllowBrowser: true
+  });
 
   useEffect(() => {
     fetchLearningItems();
