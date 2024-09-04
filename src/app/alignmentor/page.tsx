@@ -117,11 +117,6 @@ const AISafetyExplorer: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
 
-  const openai = new OpenAI({
-    apiKey: "sk-proj-avXTs6KIIYIZgQBsuKglT3BlbkFJ7NWO4wHxPaR1e2nvVjti",
-    dangerouslyAllowBrowser: true
-  });
-
   useEffect(() => {
     fetchLearningItems();
   }, []);

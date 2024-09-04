@@ -9,6 +9,7 @@ import { DynamoDB } from 'aws-sdk';
 import { Viewer, SpecialZoomLevel } from '@react-pdf-viewer/core';
 import { pageNavigationPlugin } from '@react-pdf-viewer/page-navigation';
 import { zoomPlugin } from '@react-pdf-viewer/zoom';
+import OpenAI from 'openai'
 
 import '@react-pdf-viewer/core/lib/styles/index.css';
 import '@react-pdf-viewer/page-navigation/lib/styles/index.css';
@@ -104,12 +105,14 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
   const [query, setQuery] = useState('');
   const [aiResponses, setAiResponses] = useState<{ role: 'user' | 'ai', content: string }[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingAiResponse, setIsLoadingAiResponse] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [scale, setScale] = useState(SpecialZoomLevel.PageFit);
   const [showAiPanel, setShowAiPanel] = useState(false);
   const [showAiIntro, setShowAiIntro] = useState(true);
+  const [pdf_file_id, setPdfFileId] = useState('');
 
   const pdfContainerRef = useRef<HTMLDivElement>(null);
   const aiInputRef = useRef<HTMLTextAreaElement>(null);
@@ -127,6 +130,67 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
     secretAccessKey: "Dn2iGW5gsceJLZfJNdyPmaCQ8UzxWRv4MJ4WYX2J",
   });
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '';
+
+  const openai = new OpenAI({
+    apiKey: "sk-proj-avXTs6KIIYIZgQBsuKglT3BlbkFJ7NWO4wHxPaR1e2nvVjti",
+    dangerouslyAllowBrowser: true
+  });
+
+  async function getThreadResponse() {
+    console.log('Testing thread response');
+
+    try {
+      // Create a thread with the initial message
+      const thread = await openai.beta.threads.create({
+        messages: [
+          {
+            role: "user",
+            content: query,
+            attachments: [
+              {
+                file_id: pdf_file_id,
+                tools: [{ type: "file_search" }]
+              }
+            ]
+          }
+        ]
+      });
+
+      // Create and start a run
+      const run = await openai.beta.threads.runs.create(thread.id, {
+        assistant_id: "asst_mWViXAv7irEltBwI5TMiDZ2x",
+      });
+
+      // Poll for the run to complete
+      let runStatus;
+      do {
+        runStatus = await openai.beta.threads.runs.retrieve(thread.id, run.id);
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait for 1 second before polling again
+      } while (runStatus.status !== 'completed' && runStatus.status !== 'failed');
+
+      if (runStatus.status === 'failed') {
+        throw new Error('Run failed: ' + runStatus.last_error?.message);
+      }
+
+      // Retrieve the messages
+      const messages = await openai.beta.threads.messages.list(thread.id);
+
+      // Get the last message from the assistant
+      const lastMessage = messages.data.find(message => message.role === 'assistant');
+      if (lastMessage && lastMessage.content[0].type === 'text') {
+        // setResponse(lastMessage.content[0].text.value);
+        console.log(lastMessage.content[0].text.value);
+
+      } else {
+        // setResponse('No response from the assistant.');
+        console.log('No response from assistant');
+      }
+    } catch (err) {
+      console.error('Error:', err);
+      // setError(err.message);
+    }
+  }
+
 
   useEffect(() => {
     if (params.resourceId) {
@@ -156,6 +220,7 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
         const arxivId = result.Item.link.split('/').pop();
         setPaperTitle(result.Item.title);
         setPdfUrl(`${API_BASE_URL}/api/pdf/${arxivId}`);
+        setPdfFileId(result.Item.id);
       } else {
         console.error('Item not found or not a paper');
       }
@@ -166,17 +231,76 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
     }
   };
 
+  // const handleQuery = async () => {
+  //   if (!query.trim()) return;
+
+  //   const userQuery = query.trim();
+  //   setAiResponses(prev => [...prev, { role: 'user', content: userQuery }]);
+  //   setQuery('');
+
+  //   // Simulate AI response (replace with actual RAG-powered AI integration)
+  //   setTimeout(() => {
+  //     setAiResponses(prev => [...prev, { role: 'ai', content: `Here's what I found regarding "${userQuery}" in the context of this paper, using my RAG-powered analysis: [AI-generated response would go here]` }]);
+  //   }, 1000);
+  // };
   const handleQuery = async () => {
     if (!query.trim()) return;
 
     const userQuery = query.trim();
     setAiResponses(prev => [...prev, { role: 'user', content: userQuery }]);
     setQuery('');
+    setIsLoadingAiResponse(true);
 
-    // Simulate AI response (replace with actual RAG-powered AI integration)
-    setTimeout(() => {
-      setAiResponses(prev => [...prev, { role: 'ai', content: `Here's what I found regarding "${userQuery}" in the context of this paper, using my RAG-powered analysis: [AI-generated response would go here]` }]);
-    }, 1000);
+    try {
+      // Create a thread with the initial message
+      const thread = await openai.beta.threads.create({
+        messages: [
+          {
+            role: "user",
+            content: userQuery,
+            attachments: [
+              {
+                file_id: pdf_file_id,
+                tools: [{ type: "file_search" }]
+              }
+            ]
+          }
+        ]
+      });
+
+      // Create and start a run
+      const run = await openai.beta.threads.runs.create(thread.id, {
+        assistant_id: "asst_mWViXAv7irEltBwI5TMiDZ2x",
+      });
+
+      // Poll for the run to complete
+      let runStatus;
+      do {
+        runStatus = await openai.beta.threads.runs.retrieve(thread.id, run.id);
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait for 1 second before polling again
+      } while (runStatus.status !== 'completed' && runStatus.status !== 'failed');
+
+      if (runStatus.status === 'failed') {
+        throw new Error('Run failed: ' + runStatus.last_error?.message);
+      }
+
+      // Retrieve the messages
+      const messages = await openai.beta.threads.messages.list(thread.id);
+
+      // Get the last message from the assistant
+      const lastMessage = messages.data.find(message => message.role === 'assistant');
+
+      if (lastMessage && lastMessage.content[0].type === 'text') {
+        setAiResponses(prev => [...prev, { role: 'ai', content: lastMessage.content[0].text.value }]);
+      } else {
+        setAiResponses(prev => [...prev, { role: 'ai', content: 'No response from the assistant.' }]);
+      }
+    } catch (err) {
+      console.error('Error:', err);
+      setAiResponses(prev => [...prev, { role: 'ai', content: `Error: ${err.message}` }]);
+    } finally {
+      setIsLoadingAiResponse(false);
+    }
   };
 
   const handlePageChange = (e: any) => {
@@ -204,6 +328,13 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
       <header className={`flex justify-between items-center p-4 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border-b`}>
         <h1 className="text-2xl font-bold truncate max-w-2xl">{paperTitle}</h1>
         <div className="flex items-center space-x-4">
+          <button
+            onClick={() => handleQuery()}
+            className={`relative flex items-center justify-center p-3 rounded-full text-white transition-all duration-300 ease-in-out shadow-2xl ${showAiPanel ? 'bg-gradient-to-r from-blue-500 to-blue-600' : 'bg-gradient-to-r from-blue-400 to-blue-500'} hover:from-blue-600 hover:to-blue-700 transform hover:scale-105`}
+            style={{ minWidth: '200px' }}
+          >
+            Test
+          </button>
           <button
             onClick={() => setShowAiPanel(!showAiPanel)}
             className={`relative flex items-center justify-center p-3 rounded-full text-white transition-all duration-300 ease-in-out shadow-2xl ${showAiPanel ? 'bg-gradient-to-r from-blue-500 to-blue-600' : 'bg-gradient-to-r from-blue-400 to-blue-500'} hover:from-blue-600 hover:to-blue-700 transform hover:scale-105`}
@@ -357,6 +488,7 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
                     </p>
                   </motion.div>
                 ))}
+                
               </div>
               <div className={`p-4 ${darkMode ? 'border-gray-700' : 'border-gray-200'} border-t`}>
                 <div className="mb-2">
@@ -392,8 +524,8 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
                     rows={3}
                   />
                   <button
-                    onClick={handleQuery}
-                    className="absolute right-2 bottom-2 p-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50 transition-all duration-200"
+                    onClick={() => handleQuery()}
+                    className="absolute right-2 bottom-2 p-2 mb-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50 transition-all duration-200"
                   >
                     <Send size={20} />
                   </button>
@@ -405,6 +537,7 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
       </div>
     </div>
   );
-};
+  ;
+}
 
 export default ExplorerPage;
