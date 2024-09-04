@@ -14,6 +14,13 @@ import OpenAI from 'openai'
 import '@react-pdf-viewer/core/lib/styles/index.css';
 import '@react-pdf-viewer/page-navigation/lib/styles/index.css';
 import '@react-pdf-viewer/zoom/lib/styles/index.css';
+import 'katex/dist/katex.min.css';
+import { InlineMath, BlockMath } from 'react-katex';
+import ReactMarkdown from 'react-markdown';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
+
 
 const PDFWorker = dynamic(() => import('@react-pdf-viewer/core').then(mod => mod.Worker), { ssr: false });
 
@@ -323,6 +330,46 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
     return <AILoader />;
   }
 
+  const MathMarkdownResponse = ({ response, darkMode }) => {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className={`p-3 rounded-lg ${response.role === 'user'
+            ? darkMode
+              ? 'bg-blue-900 ml-8'
+              : 'bg-blue-100 ml-8'
+            : darkMode
+              ? 'bg-gray-700 mr-8'
+              : 'bg-gray-100 mr-8'
+          }`}
+      >
+        <div
+          className={`text-sm ${response.role === 'user'
+              ? darkMode
+                ? 'text-blue-200'
+                : 'text-blue-800'
+              : darkMode
+                ? 'text-gray-200'
+                : 'text-gray-800'
+            }`}
+        >
+          <ReactMarkdown
+            remarkPlugins={[remarkMath]}
+            rehypePlugins={[rehypeKatex]}
+            components={{
+              p: ({ node, ...props }) => <p className="mb-4" {...props} />,
+              h3: ({ node, ...props }) => <h3 className="text-lg font-semibold mb-2 mt-4" {...props} />,
+            }}
+          >
+            {response.content}
+          </ReactMarkdown>
+        </div>
+      </motion.div>
+    );
+  };
+
   return (
     <div className={`flex flex-col h-screen ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
       <header className={`flex justify-between items-center p-4 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border-b`}>
@@ -470,25 +517,9 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
                   </div>
                 )}
                 {aiResponses.map((response, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className={`p-3 rounded-lg ${response.role === 'user'
-                      ? darkMode ? 'bg-blue-900 ml-8' : 'bg-blue-100 ml-8'
-                      : darkMode ? 'bg-gray-700 mr-8' : 'bg-gray-100 mr-8'
-                      }`}
-                  >
-                    <p className={`text-sm ${response.role === 'user'
-                      ? darkMode ? 'text-blue-200' : 'text-blue-800'
-                      : darkMode ? 'text-gray-200' : 'text-gray-800'
-                      }`}>
-                      {response.content}
-                    </p>
-                  </motion.div>
+                  <MathMarkdownResponse key={index} response={response} darkMode={darkMode} />
                 ))}
-                
+
               </div>
               <div className={`p-4 ${darkMode ? 'border-gray-700' : 'border-gray-200'} border-t`}>
                 <div className="mb-2">
