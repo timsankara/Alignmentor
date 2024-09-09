@@ -298,19 +298,11 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
       const lastMessage = messages.data.find(message => message.role === 'assistant');
 
       if (lastMessage) {
-        let responseContent = '';
-        for (const contentBlock of lastMessage.content) {
-          if (contentBlock.type === 'text') {
-            responseContent += contentBlock.text.value;
-          } else if (contentBlock.type === 'image_file') {
-            // Handle image file if needed
-            responseContent += '[Image]';
-          }
-          // Add handling for other content types if necessary
-        }
-        setAiResponses(prev => [...prev, { role: 'ai', content: responseContent }]);
+        // Process the message content
+        const processedContent = processMessageContent(lastMessage);
+        setAiResponses(prev => [...prev, { role: 'ai', content: processedContent }]);
       } else {
-        setAiResponses(prev => [...prev, { role: 'ai', content: 'No response from the assistant.' }]);
+        setAiResponses(prev => [...prev, { role: 'ai', content: 'No response from our assistant, Please try again.' }]);
       }
     } catch (error: unknown) {
       console.error('Error:', error);
@@ -320,11 +312,71 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
       } else if (typeof error === 'string') {
         errorMessage = error;
       }
-      setAiResponses(prev => [...prev, { role: 'ai', content: `Error: ${errorMessage}` }]);
+      setAiResponses(prev => [...prev, { role: 'ai', content: `Error: Please retry your query again` }]);
     } finally {
       setIsLoadingAiResponse(false);
     }
   };
+
+  interface Message {
+    content: MessageContent[];
+  }
+
+  interface MessageContent {
+    type: string;
+    text?: MessageContentText;
+  }
+
+  interface MessageContentText {
+    value: string;
+    annotations?: Annotation[];
+  }
+
+  interface Annotation {
+    type: string;
+    text: string;
+    start_index: number;
+    end_index: number;
+    file_citation?: FileCitation;
+    file_path?: FilePath;
+  }
+
+  interface FileCitation {
+    file_id: string;
+    quote?: string;
+  }
+
+  interface FilePath {
+    file_id: string;
+  }
+
+  function processMessageContent(message: Message): string {
+    let processedContent = '';
+    const citations: string[] = [];
+
+    message.content.forEach((contentBlock) => {
+      if (contentBlock.type === 'text' && contentBlock.text) {
+        let blockContent = contentBlock.text.value;
+        const sortedAnnotations = contentBlock.text.annotations?.sort((a, b) => b.start_index - a.start_index) || [];
+
+        sortedAnnotations.forEach((annotation: Annotation) => {
+          blockContent = blockContent.slice(0, annotation.start_index) + blockContent.slice(annotation.end_index);
+        });
+
+        processedContent += blockContent;
+      } else if (contentBlock.type === 'image_file') {
+        processedContent += '[Image]';
+      }
+      // Handle other content types if necessary
+    });
+
+    // Append citations to the processed content
+    if (citations.length > 0) {
+      processedContent += '\n\n' + citations.join('\n');
+    }
+
+    return processedContent;
+  }
 
   const handlePageChange = (e: any) => {
     setCurrentPage(e.currentPage);
