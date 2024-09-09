@@ -26,6 +26,7 @@ interface LearningItem {
 }
 
 const AI_SAFETY_AREAS = [
+  "AI Safety Foundations",
   "Reinforcement Learning from Human (or AI) Feedback",
   "Scalable Oversight",
   "Robustness, Unlearning and Control",

@@ -26,6 +26,7 @@ interface LearningItem {
 }
 
 type AreaKey =
+  | "AI Safety Foundations"
   | "Reinforcement Learning from Human (or AI) Feedback"
   | "Scalable Oversight"
   | "Robustness, Unlearning and Control"
@@ -37,6 +38,7 @@ type AreaKey =
   | "Cooperative AI and Multi-Agent Systems";
 
 const AI_SAFETY_AREAS: AreaKey[] = [
+  "AI Safety Foundations",
   "Reinforcement Learning from Human (or AI) Feedback",
   "Scalable Oversight",
   "Robustness, Unlearning and Control",
@@ -307,7 +309,7 @@ const AISafetyExplorer: React.FC = () => {
       <div className="p-6">
         <h2 className="text-xl font-semibold mb-2 text-indigo-600 dark:group-hover:text-indigo-400 transition-colors duration-300">{area}</h2>
         <p className="text-gray-600 dark:text-gray-300 mb-4">
-          Explore {learningItems[area]?.length || 0} items in this area
+          Explore {learningItems[area]?.length || 0} papers in this area
         </p>
         <motion.div
           className="flex justify-end"

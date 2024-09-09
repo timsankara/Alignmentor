@@ -30,6 +30,7 @@ const truncateText = (text: string, maxLength: number): string => {
 };
 
 type AreaKey =
+  | "AI Safety Foundations"
   | "Reinforcement Learning from Human (or AI) Feedback"
   | "Scalable Oversight"
   | "Robustness, Unlearning and Control"
@@ -41,6 +42,7 @@ type AreaKey =
   | "Cooperative AI and Multi-Agent Systems";
 
 const AI_SAFETY_AREAS: AreaKey[] = [
+  "AI Safety Foundations",
   "Reinforcement Learning from Human (or AI) Feedback",
   "Scalable Oversight",
   "Robustness, Unlearning and Control",

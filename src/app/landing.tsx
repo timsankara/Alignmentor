@@ -380,6 +380,10 @@ const PaperCategoriesSection: React.FC = () => {
 
   const categories = [
     {
+      title: "AI Safety Foundations",
+      description: "Explore the fundamental literature that explains the basics of AI safety and Machine Learning.",
+    },
+    {
       title: "Reinforcement Learning from Human (or AI) Feedback",
       description: "Explore how AI systems learn from interaction, ensuring alignment with human values.",
     },
