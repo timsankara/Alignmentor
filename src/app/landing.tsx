@@ -4,6 +4,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, useAnimation } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
+import * as amplitude from "@amplitude/analytics-browser"
+import Head from "next/head"
+import Script from 'next/script'
 
 const privacyPolicy = `
 Privacy Policy for Alignmentor
@@ -134,9 +137,32 @@ const LandingPage: React.FC = () => {
     setModalContent(null);
   };
 
+  interface Analytics {
+    trackEvent: (name: string, data?: Record<string, any>) => void
+  }
+
+  useEffect(() => {
+    amplitude.init("234cb5ac952c953af7b04808156d15f5", {
+      defaultTracking: true
+    })
+    amplitude.track("Landing Page Visit")
+  }, [])
+
   return (
     <div className="bg-white text-gray-900 min-h-screen">
       {/* Hero Section */}
+      <Head>
+        <Script
+          src="https://cdn.amplitude.com/script/234cb5ac952c953af7b04808156d15f5.js"
+          strategy="afterInteractive"
+        />
+        <Script id="amplitude-init" strategy="afterInteractive">
+          {`
+          window.amplitude.add(window.sessionReplay.plugin({sampleRate: 1}));
+          window.amplitude.init('234cb5ac952c953af7b04808156d15f5', {"fetchRemoteConfig":true,"autocapture":true});
+        `}
+        </Script>
+      </Head>
       <section className="relative h-screen flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200 z-0" />
         <motion.div
