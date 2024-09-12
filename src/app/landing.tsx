@@ -151,7 +151,7 @@ const LandingPage: React.FC = () => {
   return (
     <div className="bg-white text-gray-900 min-h-screen">
       {/* Hero Section */}
-      <Head>
+      {/* <Head> */}
         <Script
           src="https://cdn.amplitude.com/script/234cb5ac952c953af7b04808156d15f5.js"
           strategy="afterInteractive"
@@ -162,7 +162,7 @@ const LandingPage: React.FC = () => {
           window.amplitude.init('234cb5ac952c953af7b04808156d15f5', {"fetchRemoteConfig":true,"autocapture":true});
         `}
         </Script>
-      </Head>
+      {/* </Head> */}
       <section className="relative h-screen flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200 z-0" />
         <motion.div
