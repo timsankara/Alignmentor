@@ -5,7 +5,6 @@ import React, { useState, useEffect } from 'react';
 import { motion, useAnimation } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import * as amplitude from "@amplitude/analytics-browser"
-import Head from "next/head"
 import Script from 'next/script'
 
 const privacyPolicy = `
@@ -151,18 +150,23 @@ const LandingPage: React.FC = () => {
   return (
     <div className="bg-white text-gray-900 min-h-screen">
       {/* Hero Section */}
-      {/* <Head> */}
-        <Script
-          src="https://cdn.amplitude.com/script/234cb5ac952c953af7b04808156d15f5.js"
-          strategy="afterInteractive"
-        />
-        <Script id="amplitude-init" strategy="afterInteractive">
-          {`
-          window.amplitude.add(window.sessionReplay.plugin({sampleRate: 1}));
-          window.amplitude.init('234cb5ac952c953af7b04808156d15f5', {"fetchRemoteConfig":true,"autocapture":true});
+      <Script
+        src="https://cdn.amplitude.com/script/234cb5ac952c953af7b04808156d15f5.js"
+        strategy="afterInteractive"
+      />
+      <Script id="amplitude-init" strategy="afterInteractive">
+        {`
+          function initAmplitude() {
+            if (window.amplitude) {
+              window.amplitude.add(window.sessionReplay.plugin({sampleRate: 1}));
+              window.amplitude.init('234cb5ac952c953af7b04808156d15f5', {"fetchRemoteConfig":true,"autocapture":true});
+            } else {
+              setTimeout(initAmplitude, 100);
+            }
+          }
+          window.addEventListener('load', initAmplitude);
         `}
-        </Script>
-      {/* </Head> */}
+      </Script>
       <section className="relative h-screen flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200 z-0" />
         <motion.div
@@ -216,7 +220,6 @@ const LandingPage: React.FC = () => {
         <motion.div
           className="absolute inset-0 z-0"
           style={{
-            backgroundImage: "url('/path/to/abstract-ai-safety-image.jpg')",
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             opacity: 0.1,
