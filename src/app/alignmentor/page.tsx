@@ -1,10 +1,11 @@
 'use client'
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, ChevronRight, Sun, Moon, ChevronDown, ChevronUp, BookOpen, FileText, Clock, User, Calendar, AlertTriangle } from 'lucide-react';
 import { DynamoDB } from 'aws-sdk';
 import OpenAI from 'openai'
+import * as amplitude from "@amplitude/analytics-browser"
 
 // Initialize DynamoDB client
 const dynamoDB = new DynamoDB.DocumentClient({
@@ -118,10 +119,38 @@ const AISafetyExplorer: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
+  const [isMounted, setIsMounted] = useState(false);
+  const hasTracked = useRef(false);
 
   useEffect(() => {
     fetchLearningItems();
   }, []);
+
+  useEffect(() => {
+    setIsMounted(true);
+    return () => setIsMounted(false);
+  }, []);
+
+  useEffect(() => {
+    const initAndTrack = async () => {
+      if (hasTracked.current) return;
+
+      try {
+        await amplitude.init(process.env.NEXT_AMPLITUDE_API_KEY || '', undefined, {
+          defaultTracking: true
+        });
+
+        await amplitude.track('Viewed: Alignmentor Page');
+        hasTracked.current = true;
+      } catch (error) {
+        console.error('Error initializing or tracking with Amplitude:', error);
+      }
+    };
+
+    if (isMounted) {
+      initAndTrack();
+    }
+  }, [isMounted]);
 
   const fetchLearningItems = async () => {
     setIsLoading(true);

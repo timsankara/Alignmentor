@@ -1,7 +1,7 @@
 /* eslint-disable react/no-unescaped-entities */
 'use client'
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, useAnimation } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import * as amplitude from "@amplitude/analytics-browser"
@@ -120,12 +120,40 @@ const LandingPage: React.FC = () => {
   const [scrollY, setScrollY] = useState(0);
   const [modalContent, setModalContent] = useState<string | null>(null);
   const [modalTitle, setModalTitle] = useState<string>('');
+  const [isMounted, setIsMounted] = useState(false);
+  const hasTracked = useRef(false);
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  useEffect(() => {
+    setIsMounted(true);
+    return () => setIsMounted(false);
+  }, []);
+
+  useEffect(() => {
+    const initAndTrack = async () => {
+      if (hasTracked.current) return;
+
+      try {
+        await amplitude.init(process.env.NEXT_AMPLITUDE_API_KEY || '', undefined, {
+          defaultTracking: true
+        });
+
+        await amplitude.track('Viewed: Landing Page');
+        hasTracked.current = true;
+      } catch (error) {
+        console.error('Error initializing or tracking with Amplitude:', error);
+      }
+    };
+
+    if (isMounted) {
+      initAndTrack();
+    }
+  }, [isMounted]);
 
   const openModal = (content: string, title: string) => {
     setModalContent(content);
