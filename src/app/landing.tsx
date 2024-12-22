@@ -129,8 +129,8 @@ const LandingPage: React.FC = () => {
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
     window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
     console.log(user)
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   useEffect(() => {
@@ -240,14 +240,16 @@ const LandingPage: React.FC = () => {
               </motion.div>
             ))}
           </motion.div>
-          <motion.button
+          {/* <a href="/api/auth/login">Login</a> */}
+          <motion.a
             className="bg-black text-white px-8 py-4 rounded-full text-lg font-medium hover:bg-gray-900 transition-colors duration-300"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => window.location.href = "/alignmentor"}
+            // onClick={() => window.location.href = "/alignmentor"}
+            href="/api/auth/login"
           >
             Start Your Safe AI Journey
-          </motion.button>
+          </motion.a>
         </motion.div>
         <motion.div
           className="absolute inset-0 z-0"
