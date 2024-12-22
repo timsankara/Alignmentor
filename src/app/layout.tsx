@@ -16,7 +16,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <UserProvider loginUrl="/api/auth/login" profileUrl="/api/auth/me">
+    <UserProvider>
       <html lang="en">
         <body className={inter.className}>{children}</body>
       </html>
