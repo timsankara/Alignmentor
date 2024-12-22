@@ -1,12 +1,13 @@
 /* eslint-disable react/no-unescaped-entities */
-'use client'
+"use client";
 
-import React, { useState, useEffect, useRef } from 'react';
-import { motion, useAnimation } from 'framer-motion';
-import { useInView } from 'react-intersection-observer';
-import * as amplitude from "@amplitude/analytics-browser"
-import Script from 'next/script'
-import { useUser } from '@auth0/nextjs-auth0/client';
+import React, { useState, useEffect, useRef } from "react";
+import { motion, useAnimation } from "framer-motion";
+import { useInView } from "react-intersection-observer";
+import * as amplitude from "@amplitude/analytics-browser";
+import Script from "next/script";
+import { useUser } from "@auth0/nextjs-auth0/client";
+import { useRouter } from "next/navigation";
 
 const privacyPolicy = `
 Privacy Policy for Alignmentor
@@ -116,20 +117,23 @@ const acknowledgement = `
   We stand on the shoulders of giants, and it is through their work that we are able to continue advancing the field of AI safety. Thank you all for your dedication to ensuring a beneficial future with AI.
     `;
 
-
 const LandingPage: React.FC = () => {
   const [scrollY, setScrollY] = useState(0);
   const [modalContent, setModalContent] = useState<string | null>(null);
-  const [modalTitle, setModalTitle] = useState<string>('');
+  const [modalTitle, setModalTitle] = useState<string>("");
   const [isMounted, setIsMounted] = useState(false);
   const hasTracked = useRef(false);
-  const { user, error: userError, isLoading: userLoading } = useUser();
+  const { user, error, isLoading } = useUser();
+  const router = useRouter();
 
+  if (user) {
+    router.push("/alignmentor");
+    return null;
+  }
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
     window.addEventListener("scroll", handleScroll);
-    console.log(user)
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
@@ -143,14 +147,18 @@ const LandingPage: React.FC = () => {
       if (hasTracked.current) return;
 
       try {
-        await amplitude.init(process.env.NEXT_AMPLITUDE_API_KEY || '', undefined, {
-          defaultTracking: true
-        });
+        await amplitude.init(
+          process.env.NEXT_AMPLITUDE_API_KEY || "",
+          undefined,
+          {
+            defaultTracking: true,
+          },
+        );
 
-        await amplitude.track('Viewed: Landing Page');
+        await amplitude.track("Viewed: Landing Page");
         hasTracked.current = true;
       } catch (error) {
-        console.error('Error initializing or tracking with Amplitude:', error);
+        console.error("Error initializing or tracking with Amplitude:", error);
       }
     };
 
@@ -169,15 +177,15 @@ const LandingPage: React.FC = () => {
   };
 
   interface Analytics {
-    trackEvent: (name: string, data?: Record<string, any>) => void
+    trackEvent: (name: string, data?: Record<string, any>) => void;
   }
 
   useEffect(() => {
     amplitude.init("234cb5ac952c953af7b04808156d15f5", {
-      defaultTracking: true
-    })
-    amplitude.track("Landing Page Visit")
-  }, [])
+      defaultTracking: true,
+    });
+    amplitude.track("Landing Page Visit");
+  }, []);
 
   return (
     <div className="bg-white text-gray-900 min-h-screen">
@@ -229,16 +237,22 @@ const LandingPage: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6, duration: 0.8 }}
           >
-            {['Learn Safely', 'Explore Ethically', 'Shape the Future'].map((benefit, index) => (
-              <motion.div
-                key={benefit}
-                className="bg-white bg-opacity-80 backdrop-filter backdrop-blur-lg rounded-full px-6 py-2 shadow-lg"
-                whileHover={{ scale: 1.05, backgroundColor: '#000', color: '#fff' }}
-                transition={{ type: 'spring', stiffness: 300, damping: 10 }}
-              >
-                {benefit}
-              </motion.div>
-            ))}
+            {["Learn Safely", "Explore Ethically", "Shape the Future"].map(
+              (benefit, index) => (
+                <motion.div
+                  key={benefit}
+                  className="bg-white bg-opacity-80 backdrop-filter backdrop-blur-lg rounded-full px-6 py-2 shadow-lg"
+                  whileHover={{
+                    scale: 1.05,
+                    backgroundColor: "#000",
+                    color: "#fff",
+                  }}
+                  transition={{ type: "spring", stiffness: 300, damping: 10 }}
+                >
+                  {benefit}
+                </motion.div>
+              ),
+            )}
           </motion.div>
           {/* <a href="/api/auth/login">Login</a> */}
           <motion.a
@@ -254,8 +268,8 @@ const LandingPage: React.FC = () => {
         <motion.div
           className="absolute inset-0 z-0"
           style={{
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
+            backgroundSize: "cover",
+            backgroundPosition: "center",
             opacity: 0.1,
           }}
           animate={{
@@ -268,7 +282,9 @@ const LandingPage: React.FC = () => {
       {/* Feature Section */}
       <section className="py-20 px-4">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-4xl md:text-5xl font-bold text-center mb-16">Secure AI Safety Education</h2>
+          <h2 className="text-4xl md:text-5xl font-bold text-center mb-16">
+            Secure AI Safety Education
+          </h2>
           <div className="grid md:grid-cols-3 gap-12">
             {features.map((feature, index) => (
               <FeatureCard key={index} {...feature} />
@@ -295,19 +311,24 @@ const LandingPage: React.FC = () => {
           </div>
           <div className="flex space-x-6">
             <button
-              onClick={() => openModal(termsOfService, 'Terms of Service')}
+              onClick={() => openModal(termsOfService, "Terms of Service")}
               className="text-gray-600 hover:text-black transition-colors duration-300"
             >
               Terms
             </button>
             <button
-              onClick={() => openModal(privacyPolicy, 'Privacy Policy')}
+              onClick={() => openModal(privacyPolicy, "Privacy Policy")}
               className="text-gray-600 hover:text-black transition-colors duration-300"
             >
               Privacy
             </button>
-            <a href="#" className="text-gray-600 hover:text-black transition-colors duration-300"
-              onClick={() => window.location.href = "mailto:tim@rookih.com?subject=Contact%20from%20Alignmentor"}
+            <a
+              href="#"
+              className="text-gray-600 hover:text-black transition-colors duration-300"
+              onClick={() =>
+                (window.location.href =
+                  "mailto:tim@rookih.com?subject=Contact%20from%20Alignmentor")
+              }
             >
               Contact
             </a>
@@ -346,22 +367,29 @@ const LandingPage: React.FC = () => {
 const features = [
   {
     title: "Secure Learning",
-    description: "Our platform ensures your learning journey is safe and ethical, prioritizing responsible AI practices.",
+    description:
+      "Our platform ensures your learning journey is safe and ethical, prioritizing responsible AI practices.",
     icon: "🔒",
   },
   {
     title: "Cutting-edge Content",
-    description: "Stay updated with the latest developments in AI safety, curated by experts in the field.",
+    description:
+      "Stay updated with the latest developments in AI safety, curated by experts in the field.",
     icon: "📚",
   },
   {
     title: "Ethical Exploration",
-    description: "Engage with AI concepts hands-on, using secure sandboxes and ethical testing environments.",
+    description:
+      "Engage with AI concepts hands-on, using secure sandboxes and ethical testing environments.",
     icon: "🧪",
   },
 ];
 
-const FeatureCard: React.FC<{ title: string; description: string; icon: string }> = ({ title, description, icon }) => {
+const FeatureCard: React.FC<{
+  title: string;
+  description: string;
+  icon: string;
+}> = ({ title, description, icon }) => {
   const controls = useAnimation();
   const [ref, inView] = useInView({
     triggerOnce: true,
@@ -420,8 +448,9 @@ const RAGSection: React.FC = () => {
           transition={{ duration: 0.5, delay: 0.2 }}
           className="text-xl mb-12"
         >
-          Experience enhanced learning with our Retrieval-Augmented Generation system,
-          delivering personalized AI safety education while maintaining the highest standards of data security and ethical AI use.
+          Experience enhanced learning with our Retrieval-Augmented Generation
+          system, delivering personalized AI safety education while maintaining
+          the highest standards of data security and ethical AI use.
         </motion.p>
       </div>
     </section>
@@ -444,44 +473,54 @@ const PaperCategoriesSection: React.FC = () => {
   const categories = [
     {
       title: "AI Safety Foundations",
-      description: "Explore the fundamental literature that explains the basics of AI safety and Machine Learning.",
+      description:
+        "Explore the fundamental literature that explains the basics of AI safety and Machine Learning.",
     },
     {
       title: "Reinforcement Learning from Human (or AI) Feedback",
-      description: "Explore how AI systems learn from interaction, ensuring alignment with human values.",
+      description:
+        "Explore how AI systems learn from interaction, ensuring alignment with human values.",
     },
     {
       title: "Scalable Oversight",
-      description: "Discover methods to maintain control and understanding as AI systems grow more complex.",
+      description:
+        "Discover methods to maintain control and understanding as AI systems grow more complex.",
     },
     {
       title: "Robustness, Unlearning and Control",
-      description: "Learn techniques to create reliable AI systems that can adapt safely to new situations.",
+      description:
+        "Learn techniques to create reliable AI systems that can adapt safely to new situations.",
     },
     {
       title: "Mechanistic Interpretability",
-      description: "Uncover the inner workings of AI models to ensure transparency and trustworthiness.",
+      description:
+        "Uncover the inner workings of AI models to ensure transparency and trustworthiness.",
     },
     {
       title: "Technical Governance Approaches",
-      description: "Explore frameworks for responsible development and deployment of AI technologies.",
+      description:
+        "Explore frameworks for responsible development and deployment of AI technologies.",
     },
     {
       title: "AI Alignment Theory",
-      description: "Dive into fundamental principles for creating AI systems that robustly pursue intended goals.",
+      description:
+        "Dive into fundamental principles for creating AI systems that robustly pursue intended goals.",
     },
     {
       title: "Value Learning and Specification",
-      description: "Study methods for AI systems to understand and adhere to human values and preferences.",
+      description:
+        "Study methods for AI systems to understand and adhere to human values and preferences.",
     },
     {
       title: "AI Containment and Cybersecurity",
-      description: "Investigate strategies to ensure AI systems remain secure and within intended operational bounds.",
+      description:
+        "Investigate strategies to ensure AI systems remain secure and within intended operational bounds.",
     },
     {
       title: "Cooperative AI and Multi-Agent Systems",
-      description: "Explore how multiple AI agents can work together safely and effectively.",
-    }
+      description:
+        "Explore how multiple AI agents can work together safely and effectively.",
+    },
   ];
 
   return (
@@ -509,7 +548,9 @@ const PaperCategoriesSection: React.FC = () => {
             >
               <div className="h-2 bg-gradient-to-r from-blue-500 to-purple-500" />
               <div className="p-6">
-                <h3 className="text-lg font-semibold mb-2 leading-tight">{category.title}</h3>
+                <h3 className="text-lg font-semibold mb-2 leading-tight">
+                  {category.title}
+                </h3>
                 <p className="text-sm text-gray-600">{category.description}</p>
               </div>
             </motion.div>
@@ -521,8 +562,9 @@ const PaperCategoriesSection: React.FC = () => {
           transition={{ duration: 0.5, delay: 0.4 }}
           className="text-center mt-16 text-lg text-gray-700"
         >
-          We continuously update our content to reflect the latest advancements in AI safety research.
-          Soon, you'll be able to replicate paper results and contribute your own research!
+          We continuously update our content to reflect the latest advancements
+          in AI safety research. Soon, you'll be able to replicate paper results
+          and contribute your own research!
         </motion.p>
       </div>
     </section>
@@ -559,8 +601,8 @@ const CTASection: React.FC = () => {
           transition={{ duration: 0.5, delay: 0.2 }}
           className="text-xl mb-12"
         >
-          Embark on a secure journey to understand and shape the future of AI safety.
-          Learn, explore, and contribute ethically.
+          Embark on a secure journey to understand and shape the future of AI
+          safety. Learn, explore, and contribute ethically.
         </motion.p>
         <motion.button
           initial={{ opacity: 0, y: 20 }}
@@ -569,7 +611,7 @@ const CTASection: React.FC = () => {
           className="bg-white text-black px-10 py-5 rounded-full text-xl font-medium hover:bg-gray-200 transition-colors duration-300"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          onClick={() => window.location.href = "/alignmentor"}
+          onClick={() => (window.location.href = "/alignmentor")}
         >
           Start Your Ethical AI Journey
         </motion.button>
