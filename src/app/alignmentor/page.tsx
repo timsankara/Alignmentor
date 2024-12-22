@@ -1,11 +1,26 @@
-'use client'
+"use client";
 
-import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Search, ChevronRight, Sun, Moon, ChevronDown, ChevronUp, BookOpen, FileText, Clock, User, Calendar, AlertTriangle } from 'lucide-react';
-import { DynamoDB } from 'aws-sdk';
-import OpenAI from 'openai'
-import * as amplitude from "@amplitude/analytics-browser"
+import React, { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Search,
+  ChevronRight,
+  Sun,
+  Moon,
+  ChevronDown,
+  ChevronUp,
+  BookOpen,
+  FileText,
+  Clock,
+  User,
+  Calendar,
+  AlertTriangle,
+} from "lucide-react";
+import { DynamoDB } from "aws-sdk";
+import OpenAI from "openai";
+import * as amplitude from "@amplitude/analytics-browser";
+import { useUser } from "@auth0/nextjs-auth0/client";
+import { useRouter } from "next/navigation";
 
 // Initialize DynamoDB client
 const dynamoDB = new DynamoDB.DocumentClient({
@@ -48,12 +63,17 @@ const AI_SAFETY_AREAS: AreaKey[] = [
   "AI Alignment Theory",
   "Value Learning and Specification",
   "AI Containment and Cybersecurity",
-  "Cooperative AI and Multi-Agent Systems"
+  "Cooperative AI and Multi-Agent Systems",
 ];
 
 const FuturisticLoader: React.FC = () => (
   <div className="flex flex-col items-center justify-center h-64">
-    <svg width="120" height="120" viewBox="0 0 120 120" className="text-indigo-600">
+    <svg
+      width="120"
+      height="120"
+      viewBox="0 0 120 120"
+      className="text-indigo-600"
+    >
       <motion.circle
         cx="60"
         cy="60"
@@ -67,7 +87,7 @@ const FuturisticLoader: React.FC = () => (
           duration: 2,
           ease: "easeInOut",
           repeat: Infinity,
-          repeatType: "loop"
+          repeatType: "loop",
         }}
       />
       <motion.circle
@@ -84,7 +104,7 @@ const FuturisticLoader: React.FC = () => (
           ease: "easeInOut",
           repeat: Infinity,
           repeatType: "loop",
-          delay: 0.5
+          delay: 0.5,
         }}
       />
       <motion.text
@@ -111,20 +131,31 @@ const FuturisticLoader: React.FC = () => (
 );
 
 const AISafetyExplorer: React.FC = () => {
-  const [learningItems, setLearningItems] = useState<{ [key in AreaKey]: LearningItem[] }>({} as { [key in AreaKey]: LearningItem[] });
+  const [learningItems, setLearningItems] = useState<{
+    [key in AreaKey]: LearningItem[];
+  }>({} as { [key in AreaKey]: LearningItem[] });
   const [selectedArea, setSelectedArea] = useState<AreaKey | null>(null);
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const [isMounted, setIsMounted] = useState(false);
   const hasTracked = useRef(false);
+  const { user, isLoading: loading } = useUser();
+  const router = useRouter();
+  const [userProfile, setUserProfile] = useState();
 
   useEffect(() => {
     fetchLearningItems();
   }, []);
+
+  useEffect(() => {
+    if (!user) {
+      router.push("/");
+    }
+  }, [loading]);
 
   useEffect(() => {
     setIsMounted(true);
@@ -136,14 +167,18 @@ const AISafetyExplorer: React.FC = () => {
       if (hasTracked.current) return;
 
       try {
-        await amplitude.init(process.env.NEXT_AMPLITUDE_API_KEY || '', undefined, {
-          defaultTracking: true
-        });
+        await amplitude.init(
+          process.env.NEXT_AMPLITUDE_API_KEY || "",
+          undefined,
+          {
+            defaultTracking: true,
+          },
+        );
 
-        await amplitude.track('Viewed: Alignmentor Page');
+        await amplitude.track("Viewed: Alignmentor Page");
         hasTracked.current = true;
       } catch (error) {
-        console.error('Error initializing or tracking with Amplitude:', error);
+        console.error("Error initializing or tracking with Amplitude:", error);
       }
     };
 
@@ -156,30 +191,33 @@ const AISafetyExplorer: React.FC = () => {
     setIsLoading(true);
     try {
       const params = {
-        TableName: 'AISafetyContent',
+        TableName: "AISafetyContent",
       };
       const result = await dynamoDB.scan(params).promise();
       const items = result.Items as LearningItem[];
-      const groupedItems = items.reduce((acc, item) => {
-        if (item.agenda && AI_SAFETY_AREAS.includes(item.agenda as AreaKey)) {
-          if (!acc[item.agenda as AreaKey]) {
-            acc[item.agenda as AreaKey] = [];
+      const groupedItems = items.reduce(
+        (acc, item) => {
+          if (item.agenda && AI_SAFETY_AREAS.includes(item.agenda as AreaKey)) {
+            if (!acc[item.agenda as AreaKey]) {
+              acc[item.agenda as AreaKey] = [];
+            }
+            acc[item.agenda as AreaKey].push(item);
           }
-          acc[item.agenda as AreaKey].push(item);
-        }
-        return acc;
-      }, {} as { [key in AreaKey]: LearningItem[] });
+          return acc;
+        },
+        {} as { [key in AreaKey]: LearningItem[] },
+      );
       setLearningItems(groupedItems);
     } catch (err) {
-      console.error('Failed to fetch items:', err);
-      setError('Failed to fetch learning items. Please try again later.');
+      console.error("Failed to fetch items:", err);
+      setError("Failed to fetch learning items. Please try again later.");
     }
     setIsLoading(false);
   };
 
   const toggleTheme = () => {
     setIsDarkMode(!isDarkMode);
-    document.documentElement.classList.toggle('dark');
+    document.documentElement.classList.toggle("dark");
   };
 
   const toggleItemExpansion = (itemId: string) => {
@@ -194,38 +232,41 @@ const AISafetyExplorer: React.FC = () => {
     });
   };
 
-  const filteredAreas = AI_SAFETY_AREAS.filter(area =>
-    area.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredAreas = AI_SAFETY_AREAS.filter((area) =>
+    area.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   const filteredItems = selectedArea
-    ? learningItems[selectedArea]?.filter(item =>
-      item.title.toLowerCase().includes(searchTerm.toLowerCase())
-    ) || []
+    ? learningItems[selectedArea]?.filter((item) =>
+        item.title.toLowerCase().includes(searchTerm.toLowerCase()),
+      ) || []
     : [];
 
-  const truncateDescription = (description: string, maxLength: number = 100) => {
-    if (!description) return '';
+  const truncateDescription = (
+    description: string,
+    maxLength: number = 100,
+  ) => {
+    if (!description) return "";
     if (description.length <= maxLength) return description;
-    return description.slice(0, maxLength) + '...';
+    return description.slice(0, maxLength) + "...";
   };
 
   const getFileType = (filename: string | undefined): string => {
-    if (!filename) return 'Paper';
+    if (!filename) return "Paper";
 
-    const extension = filename.split('.').pop()?.toLowerCase() || '';
+    const extension = filename.split(".").pop()?.toLowerCase() || "";
     switch (extension) {
-      case 'pdf':
-        return 'PDF';
-      case 'mp4':
-      case 'avi':
-      case 'mov':
-        return 'Video';
-      case 'mp3':
-      case 'wav':
-        return 'Audio';
+      case "pdf":
+        return "PDF";
+      case "mp4":
+      case "avi":
+      case "mov":
+        return "Video";
+      case "mp3":
+      case "wav":
+        return "Audio";
       default:
-        return 'Document';
+        return "Document";
     }
   };
 
@@ -247,7 +288,9 @@ const AISafetyExplorer: React.FC = () => {
       >
         <div className="p-4 flex-grow">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-lg font-semibold break-words pr-2">{item.title || 'Untitled'}</h3>
+            <h3 className="text-lg font-semibold break-words pr-2">
+              {item.title || "Untitled"}
+            </h3>
             <div className="flex-shrink-0 flex items-center bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 px-2 py-1 rounded-full text-xs font-medium">
               <FileText className="w-3 h-3 mr-1" />
               {fileType}
@@ -275,7 +318,7 @@ const AISafetyExplorer: React.FC = () => {
           </div>
           <motion.div
             initial={false}
-            animate={{ height: isExpanded ? 'auto' : 'auto' }}
+            animate={{ height: isExpanded ? "auto" : "auto" }}
             transition={{ duration: 0.3, ease: [0.04, 0.62, 0.23, 0.98] }}
             className="overflow-hidden"
           >
@@ -313,7 +356,7 @@ const AISafetyExplorer: React.FC = () => {
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => window.open(`/explorer/${item.id}`, '_blank')}
+            onClick={() => window.open(`/explorer/${item.id}`, "_blank")}
             className="w-full px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full text-sm font-medium transition-colors duration-300 flex items-center justify-center"
           >
             <BookOpen className="w-4 h-4 mr-2" />
@@ -336,14 +379,16 @@ const AISafetyExplorer: React.FC = () => {
       onClick={() => setSelectedArea(area)}
     >
       <div className="p-6">
-        <h2 className="text-xl font-semibold mb-2 text-indigo-600 dark:group-hover:text-indigo-400 transition-colors duration-300">{area}</h2>
+        <h2 className="text-xl font-semibold mb-2 text-indigo-600 dark:group-hover:text-indigo-400 transition-colors duration-300">
+          {area}
+        </h2>
         <p className="text-gray-600 dark:text-gray-300 mb-4">
           Explore {learningItems[area]?.length || 0} papers in this area
         </p>
         <motion.div
           className="flex justify-end"
           whileHover={{ x: 5 }}
-          transition={{ type: 'spring', stiffness: 400, damping: 10 }}
+          transition={{ type: "spring", stiffness: 400, damping: 10 }}
         >
           <ChevronRight className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
         </motion.div>
@@ -352,11 +397,13 @@ const AISafetyExplorer: React.FC = () => {
   );
 
   return (
-    <div className={`min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white ${isDarkMode ? 'dark' : ''}`}>
-      <header className="bg-white dark:bg-gray-800 shadow-md">
+    <div
+      className={`min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white ${isDarkMode ? "dark" : ""}`}
+    >
+      <header className="bg-white shadow-sm border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <motion.button
-            className="text-3xl font-bold text-indigo-600 dark:text-indigo-400"
+            className="text-2xl font-medium text-gray-900"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
@@ -364,14 +411,28 @@ const AISafetyExplorer: React.FC = () => {
           >
             Alignmentor
           </motion.button>
-          <motion.button
-            onClick={toggleTheme}
-            className="p-2 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-300"
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-          >
-            {isDarkMode ? <Sun className="w-6 h-6 text-yellow-400" /> : <Moon className="w-6 h-6 text-gray-800" />}
-          </motion.button>
+          <div className="flex items-center space-x-4">
+            <motion.button
+              onClick={toggleTheme}
+              className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-all duration-300"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+            >
+              {isDarkMode ? (
+                <Sun className="w-5 h-5" />
+              ) : (
+                <Moon className="w-5 h-5" />
+              )}
+            </motion.button>
+            <motion.a
+              href="/api/auth/logout"
+              className="px-4 py-2 rounded-full bg-gray-900 text-white text-sm font-medium hover:bg-gray-800 transition-all duration-300"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              Logout
+            </motion.a>
+          </div>
         </div>
       </header>
 
@@ -424,12 +485,14 @@ const AISafetyExplorer: React.FC = () => {
               onClick={() => setSelectedArea(null)}
               className="mb-4 text-indigo-600 dark:text-indigo-400 font-medium flex items-center hover:underline"
               whileHover={{ x: -5 }}
-              transition={{ type: 'spring', stiffness: 400, damping: 10 }}
+              transition={{ type: "spring", stiffness: 400, damping: 10 }}
             >
               <ChevronRight className="w-5 h-5 mr-1 transform rotate-180" />
               Back to Research Areas
             </motion.button>
-            <h2 className="text-3xl font-bold mb-6 text-indigo-600 dark:text-indigo-400">{selectedArea}</h2>
+            <h2 className="text-3xl font-bold mb-6 text-indigo-600 dark:text-indigo-400">
+              {selectedArea}
+            </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               <AnimatePresence>
                 {filteredItems.map((item) => renderItemCard(item))}
@@ -443,7 +506,9 @@ const AISafetyExplorer: React.FC = () => {
             transition={{ duration: 0.5 }}
             className="space-y-8"
           >
-            <h2 className="text-2xl font-semibold text-center mb-6">Explore AI Safety Research Areas</h2>
+            <h2 className="text-2xl font-semibold text-center mb-6">
+              Explore AI Safety Research Areas
+            </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               <AnimatePresence>
                 {filteredAreas.map((area) => renderAreaCard(area))}
@@ -455,8 +520,12 @@ const AISafetyExplorer: React.FC = () => {
 
       <footer className="mt-auto bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row justify-between items-center">
-          <p className="text-sm text-gray-600 dark:text-gray-400">&copy; 2024 Alignmentor. All rights reserved.</p>
-          <p className="text-sm text-gray-500 dark:text-gray-500 mt-2 sm:mt-0">Dedicated to advancing safe and ethical AI development</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            &copy; 2024 Alignmentor. All rights reserved.
+          </p>
+          <p className="text-sm text-gray-500 dark:text-gray-500 mt-2 sm:mt-0">
+            Dedicated to advancing safe and ethical AI development
+          </p>
         </div>
       </footer>
     </div>

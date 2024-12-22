@@ -1,4 +1,3 @@
-/* eslint-disable react/no-unescaped-entities */
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
@@ -48,7 +47,7 @@ Last updated: 29-Aug-2024
    If you have any questions about this Privacy Policy, please contact us at tim@rookih.com.
 
 By using Alignmentor, you agree to the collection and use of information in accordance with this policy.
-  `;
+`;
 
 const termsOfService = `
 Terms of Service for Alignmentor
@@ -95,27 +94,27 @@ Last updated: 29-Aug-2024
    If you have any questions about these Terms, please contact us at tim@rookih.com.
 
 By using Alignmentor, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service.
-  `;
+`;
 
 const acknowledgement = `
-  We would like to express our deepest gratitude to all the authors who have contributed to the AI safety literature. Your tireless efforts, groundbreaking research, and invaluable insights have been instrumental in shaping our understanding of AI safety and its critical importance for humanity's future.
+We would like to express our deepest gratitude to all the authors who have contributed to the AI safety literature. Your tireless efforts, groundbreaking research, and invaluable insights have been instrumental in shaping our understanding of AI safety and its critical importance for humanity's future.
 
-  We also extend our sincere appreciation to arXiv (arxiv.org) for providing an open-access platform that has facilitated the rapid dissemination of research papers in the field of AI safety. arXiv's role in making cutting-edge research freely available has been crucial in accelerating progress and fostering collaboration within the AI safety community.
+We also extend our sincere appreciation to arXiv (arxiv.org) for providing an open-access platform that has facilitated the rapid dissemination of research papers in the field of AI safety. arXiv's role in making cutting-edge research freely available has been crucial in accelerating progress and fostering collaboration within the AI safety community.
 
-  Some key contributors to the field include, but are not limited to:
-  • Stuart Russell
-  • Nick Bostrom
-  • Eliezer Yudkowsky
-  • Paul Christiano
-  • Toby Ord
-  • Dario Amodei
-  • Chris Olah
-  • OpenAI researchers
-  • DeepMind's safety team
-  • And many more brilliant minds working tirelessly on this crucial challenge
+Some key contributors to the field include, but are not limited to:
+• Stuart Russell
+• Nick Bostrom
+• Eliezer Yudkowsky
+• Paul Christiano
+• Toby Ord
+• Dario Amodei
+• Chris Olah
+• OpenAI researchers
+• DeepMind's safety team
+• And many more brilliant minds working tirelessly on this crucial challenge
 
-  We stand on the shoulders of giants, and it is through their work that we are able to continue advancing the field of AI safety. Thank you all for your dedication to ensuring a beneficial future with AI.
-    `;
+We stand on the shoulders of giants, and it is through their work that we are able to continue advancing the field of AI safety. Thank you all for your dedication to ensuring a beneficial future with AI.
+`;
 
 const LandingPage: React.FC = () => {
   const [scrollY, setScrollY] = useState(0);
@@ -126,10 +125,11 @@ const LandingPage: React.FC = () => {
   const { user, error, isLoading } = useUser();
   const router = useRouter();
 
-  if (user) {
-    router.push("/alignmentor");
-    return null;
-  }
+  useEffect(() => {
+    if (user) {
+      router.push("/alignmentor");
+    }
+  }, [isLoading]);
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
@@ -187,9 +187,15 @@ const LandingPage: React.FC = () => {
     amplitude.track("Landing Page Visit");
   }, []);
 
-  return (
+  return isLoading ? (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-50 to-gray-100">
+      <div className="space-y-4 text-center">
+        <div className="w-12 h-12 border-4 border-black border-t-transparent rounded-full animate-spin mx-auto"></div>
+        <p className="text-gray-900 font-light">Loading...</p>
+      </div>
+    </div>
+  ) : (
     <div className="bg-white text-gray-900 min-h-screen">
-      {/* Hero Section */}
       <Script
         src="https://cdn.amplitude.com/script/234cb5ac952c953af7b04808156d15f5.js"
         strategy="afterInteractive"
@@ -254,12 +260,10 @@ const LandingPage: React.FC = () => {
               ),
             )}
           </motion.div>
-          {/* <a href="/api/auth/login">Login</a> */}
           <motion.a
             className="bg-black text-white px-8 py-4 rounded-full text-lg font-medium hover:bg-gray-900 transition-colors duration-300"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            // onClick={() => window.location.href = "/alignmentor"}
             href="/api/auth/login"
           >
             Login To Start Learning
@@ -279,7 +283,6 @@ const LandingPage: React.FC = () => {
         />
       </section>
 
-      {/* Feature Section */}
       <section className="py-20 px-4">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-4xl md:text-5xl font-bold text-center mb-16">
@@ -293,16 +296,10 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* RAG Technology Section */}
       <RAGSection />
-
-      {/* Paper Categories Section */}
       <PaperCategoriesSection />
-
-      {/* CTA Section */}
       <CTASection />
 
-      {/* Footer */}
       <footer className="bg-gray-100 py-12 px-4">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center">
           <div className="mb-8 md:mb-0">
@@ -611,7 +608,7 @@ const CTASection: React.FC = () => {
           className="bg-white text-black px-10 py-5 rounded-full text-xl font-medium hover:bg-gray-200 transition-colors duration-300"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          onClick={() => (window.location.href = "/alignmentor")}
+          onClick={() => window.open("/alignmentor")}
         >
           Start Your Ethical AI Journey
         </motion.button>
