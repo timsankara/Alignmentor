@@ -248,7 +248,7 @@ const LandingPage: React.FC = () => {
             // onClick={() => window.location.href = "/alignmentor"}
             href="/api/auth/login"
           >
-            Login To Start Your Safe AI Journey
+            Login To Alignmentor
           </motion.a>
         </motion.div>
         <motion.div
