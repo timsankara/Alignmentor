@@ -560,7 +560,7 @@ const PaperCategoriesSection: React.FC = () => {
           className="text-center mt-16 text-lg text-gray-700"
         >
           We continuously update our content to reflect the latest advancements
-          in AI safety research. Soon, you'll be able to replicate paper results
+          in AI safety research. Soon, you will be able to replicate paper results
           and contribute your own research!
         </motion.p>
       </div>
