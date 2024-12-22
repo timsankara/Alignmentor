@@ -6,6 +6,7 @@ import { motion, useAnimation } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import * as amplitude from "@amplitude/analytics-browser"
 import Script from 'next/script'
+import { useUser } from '@auth0/nextjs-auth0/client';
 
 const privacyPolicy = `
 Privacy Policy for Alignmentor
@@ -122,11 +123,14 @@ const LandingPage: React.FC = () => {
   const [modalTitle, setModalTitle] = useState<string>('');
   const [isMounted, setIsMounted] = useState(false);
   const hasTracked = useRef(false);
+  const { user, error: userError, isLoading: userLoading } = useUser();
+
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
+    console.log(user)
   }, []);
 
   useEffect(() => {
