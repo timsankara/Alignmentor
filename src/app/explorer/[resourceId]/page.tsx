@@ -668,21 +668,21 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: '100%', opacity: 0 }}
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              className={`w-1/2 ${darkMode ? 'bg-gray-900' : 'bg-gray-50'} shadow-2xl flex flex-col`}
+              className={`w-1/2 ${darkMode ? 'bg-gray-900' : 'bg-gray-50'} flex flex-col border-l`}
               style={{ height: 'calc(100vh - 4rem)' }}
             >
-              <div className={`p-6 ${darkMode ? 'border-gray-700' : 'border-gray-200'} border-b flex justify-between items-center shadow-lg rounded-t-3xl`}>
+              <div className={`p-2 ${darkMode ? 'border-gray-700' : 'border-gray-200'} border-b flex justify-between items-center rounded-t-3xl`}>
 
-                <h2 className={`text-3xl font-bold ${darkMode ? 'text-gray-100' : 'text-gray-900'} tracking-tight`}>
-                  Paper AI Assistant
+                <h2 className={`text-lg font-bold ${darkMode ? 'text-gray-100' : 'text-gray-900'} tracking-tight`}>
+                  AI Assistant Panel
                 </h2>
 
                 <button
                   onClick={() => setShowAiPanel(false)}
-                  className={`p-2 rounded-full ${darkMode ? 'bg-gray-800 hover:bg-gray-700' : 'bg-gray-200 hover:bg-gray-300'} transition-all duration-300 ease-in-out`}
+                  className={`p-2 rounded-full ${darkMode ? 'bg-red-500 hover:bg-red-700' : 'bg-red-500 hover:bg-red-700'} transition-all duration-300 ease-in-out`}
                   aria-label="Close Panel"
                 >
-                  <X size={24} className={`${darkMode ? 'text-gray-400' : 'text-gray-600'} transform transition-transform duration-200 hover:rotate-45`} />
+                  <X size={10} className={`${darkMode ? 'text-white' : 'text-white'} transform transition-transform duration-200 hover:rotate-45`} />
                 </button>
 
               </div>
