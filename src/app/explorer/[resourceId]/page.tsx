@@ -1,28 +1,45 @@
 /* eslint-disable react/no-unescaped-entities */
-'use client'
+"use client";
 
-import React, { useState, useEffect, useRef } from 'react';
-import dynamic from 'next/dynamic';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Search, ArrowLeft, ArrowRight, ZoomIn, ZoomOut, Moon, Sun, MessageCircle, X, Send, HelpCircle, BookOpen, User, Bot } from 'lucide-react';
-import { DynamoDB } from 'aws-sdk';
-import { Viewer, SpecialZoomLevel } from '@react-pdf-viewer/core';
-import { pageNavigationPlugin } from '@react-pdf-viewer/page-navigation';
-import { zoomPlugin } from '@react-pdf-viewer/zoom';
-import OpenAI from 'openai'
+import React, { useState, useEffect, useRef } from "react";
+import dynamic from "next/dynamic";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Search,
+  ArrowLeft,
+  ArrowRight,
+  ZoomIn,
+  ZoomOut,
+  Moon,
+  Sun,
+  MessageCircle,
+  X,
+  Send,
+  HelpCircle,
+  BookOpen,
+  User,
+  Bot,
+} from "lucide-react";
+import { DynamoDB } from "aws-sdk";
+import { Viewer, SpecialZoomLevel } from "@react-pdf-viewer/core";
+import { pageNavigationPlugin } from "@react-pdf-viewer/page-navigation";
+import { zoomPlugin } from "@react-pdf-viewer/zoom";
+import OpenAI from "openai";
 
-import '@react-pdf-viewer/core/lib/styles/index.css';
-import '@react-pdf-viewer/page-navigation/lib/styles/index.css';
-import '@react-pdf-viewer/zoom/lib/styles/index.css';
-import 'katex/dist/katex.min.css';
+import "@react-pdf-viewer/core/lib/styles/index.css";
+import "@react-pdf-viewer/page-navigation/lib/styles/index.css";
+import "@react-pdf-viewer/zoom/lib/styles/index.css";
+import "katex/dist/katex.min.css";
 // import { InlineMath, BlockMath } from 'react-katex';
-import ReactMarkdown from 'react-markdown';
-import remarkMath from 'remark-math';
-import rehypeKatex from 'rehype-katex';
-import 'katex/dist/katex.min.css';
+import ReactMarkdown from "react-markdown";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
+import "katex/dist/katex.min.css";
 
-
-const PDFWorker = dynamic(() => import('@react-pdf-viewer/core').then(mod => mod.Worker), { ssr: false });
+const PDFWorker = dynamic(
+  () => import("@react-pdf-viewer/core").then((mod) => mod.Worker),
+  { ssr: false },
+);
 
 interface ExplorerPageProps {
   params: { resourceId: string };
@@ -39,15 +56,15 @@ const AILoader: React.FC = () => {
         transition={{
           duration: 1.5,
           repeat: Infinity,
-          ease: "linear"
+          ease: "linear",
         }}
       >
         <motion.div
           className="absolute inset-0 rounded-full"
           style={{
-            border: '2px solid rgba(0, 0, 0, 0.1)',
-            borderTopColor: '#007AFF',
-            borderLeftColor: '#007AFF',
+            border: "2px solid rgba(0, 0, 0, 0.1)",
+            borderTopColor: "#007AFF",
+            borderLeftColor: "#007AFF",
           }}
           animate={{
             rotate: 360,
@@ -55,15 +72,15 @@ const AILoader: React.FC = () => {
           transition={{
             duration: 1,
             repeat: Infinity,
-            ease: "linear"
+            ease: "linear",
           }}
         />
         <motion.div
           className="absolute inset-2 rounded-full"
           style={{
-            border: '2px solid rgba(0, 0, 0, 0.1)',
-            borderTopColor: '#FF9500',
-            borderLeftColor: '#FF9500',
+            border: "2px solid rgba(0, 0, 0, 0.1)",
+            borderTopColor: "#FF9500",
+            borderLeftColor: "#FF9500",
           }}
           animate={{
             rotate: -360,
@@ -71,7 +88,7 @@ const AILoader: React.FC = () => {
           transition={{
             duration: 1.5,
             repeat: Infinity,
-            ease: "linear"
+            ease: "linear",
           }}
         />
         <motion.div
@@ -82,7 +99,7 @@ const AILoader: React.FC = () => {
             duration: 0.5,
             repeat: Infinity,
             repeatType: "reverse",
-            ease: "easeInOut"
+            ease: "easeInOut",
           }}
         />
       </motion.div>
@@ -107,10 +124,12 @@ const AILoader: React.FC = () => {
 };
 
 const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
-  const [pdfUrl, setPdfUrl] = useState('');
-  const [paperTitle, setPaperTitle] = useState('');
-  const [query, setQuery] = useState('');
-  const [aiResponses, setAiResponses] = useState<{ role: 'user' | 'ai', content: string }[]>([]);
+  const [pdfUrl, setPdfUrl] = useState("");
+  const [paperTitle, setPaperTitle] = useState("");
+  const [query, setQuery] = useState("");
+  const [aiResponses, setAiResponses] = useState<
+    { role: "user" | "ai"; content: string }[]
+  >([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingAiResponse, setIsLoadingAiResponse] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
@@ -119,7 +138,7 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
   const [scale, setScale] = useState(SpecialZoomLevel.PageFit);
   const [showAiPanel, setShowAiPanel] = useState(false);
   const [showAiIntro, setShowAiIntro] = useState(true);
-  const [pdf_file_id, setPdfFileId] = useState('');
+  const [pdf_file_id, setPdfFileId] = useState("");
 
   const pdfContainerRef = useRef<HTMLDivElement>(null);
   const aiInputRef = useRef<HTMLTextAreaElement>(null);
@@ -136,15 +155,15 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
     accessKeyId: "AKIA55SBB5ENSF3SCWFI",
     secretAccessKey: "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",
   });
-  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '';
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
 
   const openai = new OpenAI({
     apiKey: "sk-proj-avXTs6KIIYIZgQBsuKglT3BlbkFJ7NWO4wHxPaR1e2nvVjti",
-    dangerouslyAllowBrowser: true
+    dangerouslyAllowBrowser: true,
   });
 
   async function getThreadResponse() {
-    console.log('Testing thread response');
+    console.log("Testing thread response");
 
     try {
       // Create a thread with the initial message
@@ -156,11 +175,11 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
             attachments: [
               {
                 file_id: pdf_file_id,
-                tools: [{ type: "file_search" }]
-              }
-            ]
-          }
-        ]
+                tools: [{ type: "file_search" }],
+              },
+            ],
+          },
+        ],
       });
 
       // Create and start a run
@@ -172,32 +191,35 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
       let runStatus;
       do {
         runStatus = await openai.beta.threads.runs.retrieve(thread.id, run.id);
-        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait for 1 second before polling again
-      } while (runStatus.status !== 'completed' && runStatus.status !== 'failed');
+        await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait for 1 second before polling again
+      } while (
+        runStatus.status !== "completed" &&
+        runStatus.status !== "failed"
+      );
 
-      if (runStatus.status === 'failed') {
-        throw new Error('Run failed: ' + runStatus.last_error?.message);
+      if (runStatus.status === "failed") {
+        throw new Error("Run failed: " + runStatus.last_error?.message);
       }
 
       // Retrieve the messages
       const messages = await openai.beta.threads.messages.list(thread.id);
 
       // Get the last message from the assistant
-      const lastMessage = messages.data.find(message => message.role === 'assistant');
-      if (lastMessage && lastMessage.content[0].type === 'text') {
+      const lastMessage = messages.data.find(
+        (message) => message.role === "assistant",
+      );
+      if (lastMessage && lastMessage.content[0].type === "text") {
         // setResponse(lastMessage.content[0].text.value);
         console.log(lastMessage.content[0].text.value);
-
       } else {
         // setResponse('No response from the assistant.');
-        console.log('No response from assistant');
+        console.log("No response from assistant");
       }
     } catch (err) {
-      console.error('Error:', err);
+      console.error("Error:", err);
       // setError(err.message);
     }
   }
-
 
   useEffect(() => {
     if (params.resourceId) {
@@ -206,12 +228,13 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
   }, [params.resourceId]);
 
   useEffect(() => {
-    document.documentElement.classList.toggle('dark', darkMode);
+    document.documentElement.classList.toggle("dark", darkMode);
   }, [darkMode]);
 
   useEffect(() => {
     if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+      chatContainerRef.current.scrollTop =
+        chatContainerRef.current.scrollHeight;
     }
   }, [aiResponses]);
 
@@ -219,20 +242,20 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
     setIsLoading(true);
     try {
       const params = {
-        TableName: 'AISafetyContent',
-        Key: { id: id }
+        TableName: "AISafetyContent",
+        Key: { id: id },
       };
       const result = await dynamodb.get(params).promise();
       if (result.Item) {
-        const arxivId = result.Item.link.split('/').pop();
+        const arxivId = result.Item.link.split("/").pop();
         setPaperTitle(result.Item.title);
         setPdfUrl(`${API_BASE_URL}/api/pdf/${arxivId}`);
         setPdfFileId(result.Item.id);
       } else {
-        console.error('Item not found or not a paper');
+        console.error("Item not found or not a paper");
       }
     } catch (error) {
-      console.error('Error fetching data from DynamoDB:', error);
+      console.error("Error fetching data from DynamoDB:", error);
     } finally {
       setIsLoading(false);
     }
@@ -254,8 +277,8 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
     if (!query.trim()) return;
 
     const userQuery = query.trim();
-    setAiResponses(prev => [...prev, { role: 'user', content: userQuery }]);
-    setQuery('');
+    setAiResponses((prev) => [...prev, { role: "user", content: userQuery }]);
+    setQuery("");
     setIsLoadingAiResponse(true);
 
     try {
@@ -268,11 +291,11 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
             attachments: [
               {
                 file_id: pdf_file_id,
-                tools: [{ type: "file_search" }]
-              }
-            ]
-          }
-        ]
+                tools: [{ type: "file_search" }],
+              },
+            ],
+          },
+        ],
       });
 
       // Create and start a run
@@ -284,35 +307,52 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
       let runStatus;
       do {
         runStatus = await openai.beta.threads.runs.retrieve(thread.id, run.id);
-        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait for 1 second before polling again
-      } while (runStatus.status !== 'completed' && runStatus.status !== 'failed');
+        await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait for 1 second before polling again
+      } while (
+        runStatus.status !== "completed" &&
+        runStatus.status !== "failed"
+      );
 
-      if (runStatus.status === 'failed') {
-        throw new Error('Run failed: ' + runStatus.last_error?.message);
+      if (runStatus.status === "failed") {
+        throw new Error("Run failed: " + runStatus.last_error?.message);
       }
 
       // Retrieve the messages
       const messages = await openai.beta.threads.messages.list(thread.id);
 
       // Get the last message from the assistant
-      const lastMessage = messages.data.find(message => message.role === 'assistant');
+      const lastMessage = messages.data.find(
+        (message) => message.role === "assistant",
+      );
 
       if (lastMessage) {
         // Process the message content
         const processedContent = processMessageContent(lastMessage);
-        setAiResponses(prev => [...prev, { role: 'ai', content: processedContent }]);
+        setAiResponses((prev) => [
+          ...prev,
+          { role: "ai", content: processedContent },
+        ]);
       } else {
-        setAiResponses(prev => [...prev, { role: 'ai', content: 'No response from our assistant, Please try again.' }]);
+        setAiResponses((prev) => [
+          ...prev,
+          {
+            role: "ai",
+            content: "No response from our assistant, Please try again.",
+          },
+        ]);
       }
     } catch (error: unknown) {
-      console.error('Error:', error);
-      let errorMessage = 'An unknown error occurred';
+      console.error("Error:", error);
+      let errorMessage = "An unknown error occurred";
       if (error instanceof Error) {
         errorMessage = error.message;
-      } else if (typeof error === 'string') {
+      } else if (typeof error === "string") {
         errorMessage = error;
       }
-      setAiResponses(prev => [...prev, { role: 'ai', content: `Error: Please retry your query again` }]);
+      setAiResponses((prev) => [
+        ...prev,
+        { role: "ai", content: `Error: Please retry your query again` },
+      ]);
     } finally {
       setIsLoadingAiResponse(false);
     }
@@ -351,28 +391,33 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
   }
 
   function processMessageContent(message: Message): string {
-    let processedContent = '';
+    let processedContent = "";
     const citations: string[] = [];
 
     message.content.forEach((contentBlock) => {
-      if (contentBlock.type === 'text' && contentBlock.text) {
+      if (contentBlock.type === "text" && contentBlock.text) {
         let blockContent = contentBlock.text.value;
-        const sortedAnnotations = contentBlock.text.annotations?.sort((a, b) => b.start_index - a.start_index) || [];
+        const sortedAnnotations =
+          contentBlock.text.annotations?.sort(
+            (a, b) => b.start_index - a.start_index,
+          ) || [];
 
         sortedAnnotations.forEach((annotation: Annotation) => {
-          blockContent = blockContent.slice(0, annotation.start_index) + blockContent.slice(annotation.end_index);
+          blockContent =
+            blockContent.slice(0, annotation.start_index) +
+            blockContent.slice(annotation.end_index);
         });
 
         processedContent += blockContent;
-      } else if (contentBlock.type === 'image_file') {
-        processedContent += '[Image]';
+      } else if (contentBlock.type === "image_file") {
+        processedContent += "[Image]";
       }
       // Handle other content types if necessary
     });
 
     // Append citations to the processed content
     if (citations.length > 0) {
-      processedContent += '\n\n' + citations.join('\n');
+      processedContent += "\n\n" + citations.join("\n");
     }
 
     return processedContent;
@@ -399,7 +444,7 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
   }
 
   // Define types
-  type ResponseRole = 'user' | 'ai';
+  type ResponseRole = "user" | "ai";
 
   interface ChatResponse {
     role: ResponseRole;
@@ -418,27 +463,35 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
     isLoading: boolean;
   }
 
-  const CodeBlock: React.FC<{ value: string; language: string | undefined }> = ({ value, language }) => {
+  const CodeBlock: React.FC<{
+    value: string;
+    language: string | undefined;
+  }> = ({ value, language }) => {
     return (
       <pre className="overflow-x-auto my-2 p-3 rounded-lg bg-gray-100 dark:bg-gray-800 text-sm">
-        <code className={language ? `language-${language}` : ''}>
-          {value}
-        </code>
+        <code className={language ? `language-${language}` : ""}>{value}</code>
       </pre>
     );
   };
 
-  const ChatBubble: React.FC<ChatBubbleProps> = ({ response, darkMode, isLoading }) => {
-    const isUser = response.role === 'user';
+  const ChatBubble: React.FC<ChatBubbleProps> = ({
+    response,
+    darkMode,
+    isLoading,
+  }) => {
+    const isUser = response.role === "user";
+
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, ease: "easeOut" }}
-        className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}
+        className={`flex ${isUser ? "justify-end" : "justify-start"} mb-4`}
       >
-        <div className={`flex ${isUser ? 'flex-row-reverse' : 'flex-row'} items-end max-w-[85%]`}>
-          <div className={`flex-shrink-0 ${isUser ? 'ml-3' : 'mr-3'}`}>
+        <div
+          className={`flex ${isUser ? "flex-row-reverse" : "flex-row"} items-end max-w-[85%]`}
+        >
+          <div className={`flex-shrink-0 ${isUser ? "ml-3" : "mr-3"}`}>
             {isUser ? (
               <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center shadow-md">
                 <User size={16} className="text-white" />
@@ -450,12 +503,20 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
             )}
           </div>
           <div
-            className={`px-4 py-3 rounded-2xl shadow-md ${isUser
-              ? 'bg-blue-900 text-white'
-              : darkMode
-                ? 'bg-gray-700 text-gray-100'
-                : 'bg-gray-200 text-gray-800'
-              }`}
+            className={`px-5 py-4 rounded-3xl shadow-lg ${
+              isUser
+                ? "bg-blue-900 text-white"
+                : darkMode
+                  ? "bg-gray-800 text-gray-100"
+                  : "bg-gray-100 text-gray-900"
+            }`}
+            style={{
+              fontFamily:
+                '"SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+              fontSize: "15px",
+              lineHeight: "1.6",
+              letterSpacing: "-0.015em",
+            }}
           >
             {isLoading ? (
               <DynamicLoader darkMode={darkMode} />
@@ -464,17 +525,30 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
                 remarkPlugins={[remarkMath]}
                 rehypePlugins={[rehypeKatex]}
                 components={{
-                  p: ({ node, ...props }) => <p className="mb-2 last:mb-0 text-base leading-relaxed" {...props} />,
-                  h3: ({ node, ...props }) => <h3 className="text-lg font-semibold mb-2 mt-3" {...props} />,
+                  p: ({ node, ...props }) => (
+                    <p className="mb-3 last:mb-0" {...props} />
+                  ),
+                  h3: ({ node, ...props }) => (
+                    <h3
+                      className="text-base font-semibold mb-2 mt-3"
+                      {...props}
+                    />
+                  ),
                   code: ({ node, className, children, ...props }) => {
-                    const match = /language-(\w+)/.exec(className || '');
+                    const match = /language-(\w+)/.exec(className || "");
                     const language = match ? match[1] : undefined;
-                    const value = String(children).replace(/\n$/, '');
+                    const value = String(children).replace(/\n$/, "");
                     return <CodeBlock value={value} language={language} />;
                   },
-                  ul: ({ node, ...props }) => <ul className="list-disc list-inside mb-2" {...props} />,
-                  ol: ({ node, ...props }) => <ol className="list-decimal list-inside mb-2" {...props} />,
-                  li: ({ node, ...props }) => <li className="mb-1" {...props} />,
+                  ul: ({ node, ...props }) => (
+                    <ul className="list-disc list-inside mb-3" {...props} />
+                  ),
+                  ol: ({ node, ...props }) => (
+                    <ol className="list-decimal ml-2 mb-3" {...props} />
+                  ),
+                  li: ({ node, ...props }) => (
+                    <li className="mb-2 mt-0" {...props} />
+                  ),
                 }}
               >
                 {response.content}
@@ -487,7 +561,6 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
   };
 
   const DynamicLoader: React.FC<{ darkMode: boolean }> = ({ darkMode }) => {
-
     const [complexity, setComplexity] = useState(0);
 
     useEffect(() => {
@@ -529,8 +602,9 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
                 duration: 0.5,
                 delay: index * 0.15,
               }}
-              className={`w-1.5 h-1.5 mx-0.5 rounded-full ${darkMode ? 'bg-gray-400' : 'bg-gray-600'
-                }`}
+              className={`w-1.5 h-1.5 mx-0.5 rounded-full ${
+                darkMode ? "bg-gray-400" : "bg-gray-600"
+              }`}
             />
           ))}
         </motion.div>
@@ -549,14 +623,18 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
   };
 
   return (
-    <div className={`flex flex-col h-screen ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
-      <header className={`flex justify-between items-center p-4 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border-b`}>
+    <div
+      className={`flex flex-col h-screen ${darkMode ? "bg-gray-900 text-white" : "bg-gray-50 text-gray-900"}`}
+    >
+      <header
+        className={`flex justify-between items-center p-4 ${darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"} border-b`}
+      >
         <h1 className="text-2xl font-bold truncate max-w-2xl">{paperTitle}</h1>
         <div className="flex items-center space-x-4">
           <button
             onClick={() => setShowAiPanel(!showAiPanel)}
-            className={`relative flex items-center justify-center p-3 rounded-full text-white transition-all duration-300 ease-in-out shadow-2xl ${showAiPanel ? 'bg-gradient-to-r from-blue-500 to-blue-600' : 'bg-gradient-to-r from-blue-400 to-blue-500'} hover:from-blue-600 hover:to-blue-700 transform hover:scale-105`}
-            style={{ minWidth: '200px' }}
+            className={`relative flex items-center justify-center p-3 rounded-full text-white transition-all duration-300 ease-in-out shadow-2xl ${showAiPanel ? "bg-gradient-to-r from-blue-500 to-blue-600" : "bg-gradient-to-r from-blue-400 to-blue-500"} hover:from-blue-600 hover:to-blue-700 transform hover:scale-105`}
+            style={{ minWidth: "200px" }}
           >
             {!showAiPanel && (
               <span className="absolute -top-2 -right-2 bg-red-500 rounded-full w-4 h-4 animate-pulse"></span>
@@ -569,7 +647,7 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
           </button>
           <button
             onClick={() => setDarkMode(!darkMode)}
-            className={`p-2 rounded-full ${darkMode ? 'bg-gray-700 text-gray-200' : 'bg-gray-200 text-gray-800'} hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200 shadow-lg group relative`}
+            className={`p-2 rounded-full ${darkMode ? "bg-gray-700 text-gray-200" : "bg-gray-200 text-gray-800"} hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200 shadow-lg group relative`}
           >
             {darkMode ? <Sun size={24} /> : <Moon size={24} />}
             <span className="absolute hidden group-hover:block bottom-full mb-2 left-1/2 transform -translate-x-1/2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap">
@@ -581,7 +659,7 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
       <div className="flex-1 flex overflow-hidden">
         <div className="flex-1 relative" ref={pdfContainerRef}>
           <PDFWorker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
-            <div style={{ height: 'calc(100vh)' }} className="overflow-auto">
+            <div style={{ height: "calc(100vh)" }} className="overflow-auto">
               <Viewer
                 fileUrl={pdfUrl}
                 defaultScale={scale}
@@ -595,12 +673,12 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className={`absolute bottom-4 left-0 right-0 mx-auto w-max ${darkMode ? 'bg-gray-800' : 'bg-white'} p-2 rounded-full shadow-lg flex items-center space-x-4`}
+            className={`absolute bottom-4 left-0 right-0 mx-auto w-max ${darkMode ? "bg-gray-800" : "bg-white"} p-2 rounded-full shadow-lg flex items-center space-x-4`}
           >
             <button
               onClick={() => jumpToPage(currentPage - 1)}
               disabled={currentPage === 1}
-              className={`p-2 rounded-full ${darkMode ? 'bg-gray-700 text-gray-200' : 'bg-gray-200 text-gray-800'} hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 transition-colors duration-200`}
+              className={`p-2 rounded-full ${darkMode ? "bg-gray-700 text-gray-200" : "bg-gray-200 text-gray-800"} hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 transition-colors duration-200`}
             >
               <ArrowLeft size={20} />
             </button>
@@ -610,7 +688,7 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
             <button
               onClick={() => jumpToPage(currentPage + 1)}
               disabled={currentPage === totalPages}
-              className={`p-2 rounded-full ${darkMode ? 'bg-gray-700 text-gray-200' : 'bg-gray-200 text-gray-800'} hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 transition-colors duration-200`}
+              className={`p-2 rounded-full ${darkMode ? "bg-gray-700 text-gray-200" : "bg-gray-200 text-gray-800"} hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 transition-colors duration-200`}
             >
               <ArrowRight size={20} />
             </button>
@@ -618,7 +696,7 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
               {(props) => (
                 <button
                   onClick={props.onClick}
-                  className={`p-2 rounded-full ${darkMode ? 'bg-gray-700 text-gray-200' : 'bg-gray-200 text-gray-800'} hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200`}
+                  className={`p-2 rounded-full ${darkMode ? "bg-gray-700 text-gray-200" : "bg-gray-200 text-gray-800"} hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200`}
                 >
                   <ZoomOut size={20} />
                 </button>
@@ -628,7 +706,7 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
               {(props) => (
                 <button
                   onClick={props.onClick}
-                  className={`p-2 rounded-full ${darkMode ? 'bg-gray-700 text-gray-200' : 'bg-gray-200 text-gray-800'} hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200`}
+                  className={`p-2 rounded-full ${darkMode ? "bg-gray-700 text-gray-200" : "bg-gray-200 text-gray-800"} hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200`}
                 >
                   <ZoomIn size={20} />
                 </button>
@@ -637,23 +715,31 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
           </motion.div>
 
           <AnimatePresence>
-            {showAiIntro && (
+            {!showAiIntro && (
               <motion.div
                 initial={{ opacity: 0, y: -50 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -50 }}
-                className={`absolute top-4 left-4 right-4 ${darkMode ? 'bg-blue-900 text-blue-200' : 'bg-blue-100 text-blue-800'} p-4 rounded-lg shadow-lg flex items-center justify-between`}
+                className={`absolute top-4 left-4 right-4 ${darkMode ? "bg-blue-900 text-blue-200" : "bg-blue-100 text-blue-800"} p-4 rounded-lg shadow-lg flex items-center justify-between`}
               >
                 <div className="flex items-center space-x-4">
-                  <HelpCircle size={24} className={darkMode ? 'text-blue-300' : 'text-blue-500'} />
+                  <HelpCircle
+                    size={24}
+                    className={darkMode ? "text-blue-300" : "text-blue-500"}
+                  />
                   <div>
-                    <p className="font-semibold">Need help understanding this paper?</p>
-                    <p>Our RAG-powered AI Assistant can analyze the content and answer your questions!</p>
+                    <p className="font-semibold">
+                      Need help understanding this paper?
+                    </p>
+                    <p>
+                      Our RAG-powered AI Assistant can analyze the content and
+                      answer your questions!
+                    </p>
                   </div>
                 </div>
                 <button
                   onClick={() => setShowAiIntro(false)}
-                  className={`${darkMode ? 'hover:text-blue-400' : 'hover:text-blue-600'}`}
+                  className={`${darkMode ? "hover:text-blue-400" : "hover:text-blue-600"}`}
                 >
                   <X size={20} />
                 </button>
@@ -664,35 +750,52 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
         <AnimatePresence>
           {showAiPanel && (
             <motion.div
-              initial={{ x: '100%', opacity: 0 }}
+              initial={{ x: "100%", opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
-              exit={{ x: '100%', opacity: 0 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              className={`w-1/2 ${darkMode ? 'bg-gray-900' : 'bg-gray-50'} flex flex-col border-l`}
-              style={{ height: 'calc(100vh - 4rem)' }}
+              exit={{ x: "100%", opacity: 0 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className={`w-1/2 ${darkMode ? "bg-gray-900" : "bg-blue-50"} flex flex-col border-l`}
+              style={{ height: "calc(100vh - 4rem)" }}
             >
-              <div className={`p-2 ${darkMode ? 'border-gray-700' : 'border-gray-200'} border-b flex justify-between items-center rounded-t-3xl`}>
-
-                <h2 className={`text-lg font-bold ${darkMode ? 'text-gray-100' : 'text-gray-900'} tracking-tight`}>
+              <div
+                className={`p-2 ${darkMode ? "border-gray-700" : "border-gray-200"} border-b flex justify-between items-center rounded-t-3xl`}
+              >
+                <h2
+                  className={`text-lg font-bold ${darkMode ? "text-gray-100" : "text-gray-900"} tracking-tight`}
+                >
                   AI Assistant Panel
                 </h2>
 
                 <button
                   onClick={() => setShowAiPanel(false)}
-                  className={`p-2 rounded-full ${darkMode ? 'bg-red-500 hover:bg-red-700' : 'bg-red-500 hover:bg-red-700'} transition-all duration-300 ease-in-out`}
+                  className={`p-2 rounded-full ${darkMode ? "bg-red-500 hover:bg-red-700" : "bg-red-500 hover:bg-red-700"} transition-all duration-300 ease-in-out`}
                   aria-label="Close Panel"
                 >
-                  <X size={10} className={`${darkMode ? 'text-white' : 'text-white'} transform transition-transform duration-200 hover:rotate-45`} />
+                  <X
+                    size={10}
+                    className={`${darkMode ? "text-white" : "text-white"} transform transition-transform duration-200 hover:rotate-45`}
+                  />
                 </button>
-
               </div>
 
-              <div ref={chatContainerRef} className="flex-1 overflow-auto p-6 space-y-6" style={{ maxHeight: 'calc(100% - 5rem)' }}>
+              <div
+                ref={chatContainerRef}
+                className="flex-1 overflow-auto p-6 space-y-6"
+                style={{ maxHeight: "calc(100% - 5rem)" }}
+              >
                 {aiResponses.length === 0 && (
-                  <div className={`text-center ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                    <BookOpen size={48} className="mx-auto mb-4" />
-                    <p className="text-lg font-medium">Welcome to your AI Research Assistant!</p>
-                    <p className="text-sm">I've analyzed this paper using RAG technology. Ask me anything about the content, methodology, or implications.</p>
+                  <div
+                    className={`text-center ${darkMode ? "text-gray-400" : "text-gray-600"}`}
+                  >
+                    <BookOpen size={48} className="mx-auto mb-4 text-red-400" />
+                    <p className="text-lg font-medium">
+                      Welcome to the AI Research Assistant!
+                    </p>
+                    <p className="text-sm">
+                      This paper has been analyzed using RAG technology. You can
+                      ask questions about its content, methodology, findings, or
+                      implications to get detailed insights.
+                    </p>
                   </div>
                 )}
                 {aiResponses.map((response, index) => (
@@ -700,34 +803,42 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
                     key={index}
                     response={response}
                     darkMode={darkMode}
-                    isLoading={isLoading && index === aiResponses.length - 1 && response.role === 'ai'}
+                    isLoading={
+                      isLoading &&
+                      index === aiResponses.length - 1 &&
+                      response.role === "ai"
+                    }
                   />
                 ))}
-                {isLoadingAiResponse && aiResponses[aiResponses.length - 1]?.role === 'user' && (
-                  <ChatBubble
-                    response={{ role: 'ai', content: '' }}
-                    darkMode={darkMode}
-                    isLoading={true}
-                  />
-                )}
-
+                {isLoadingAiResponse &&
+                  aiResponses[aiResponses.length - 1]?.role === "user" && (
+                    <ChatBubble
+                      response={{ role: "ai", content: "" }}
+                      darkMode={darkMode}
+                      isLoading={true}
+                    />
+                  )}
               </div>
 
-              <div className={`p-6 ${darkMode ? 'border-gray-700' : 'border-gray-200'} border-t`}>
-                <div className="mb-4">
-                  <p className="text-sm font-semibold mb-2">Suggested prompts:</p>
+              <div
+                className={`pb-6 pt-1 px-2 ${darkMode ? "border-gray-700" : "border-gray-200"} border-t`}
+              >
+                {/* <div className="mb-4">
+                  <p className="text-xs font-semibold mb-2">
+                    Suggested prompts:
+                  </p>
                   <div className="flex flex-wrap gap-3">
                     {suggestedPrompts.map((prompt, index) => (
                       <button
                         key={index}
                         onClick={() => setQuery(prompt)}
-                        className={`text-xs px-3 py-2 rounded-full ${darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'} transition-colors duration-200`}
+                        className={`text-xs px-2 py-1 rounded-full ${darkMode ? "bg-gray-700 text-gray-300 hover:bg-gray-600" : "bg-gray-200 text-gray-700 hover:bg-gray-300"} transition-colors duration-200`}
                       >
                         {prompt}
                       </button>
                     ))}
                   </div>
-                </div>
+                </div> */}
 
                 <div className="relative">
                   <textarea
@@ -735,34 +846,37 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     onKeyPress={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
+                      if (e.key === "Enter" && !e.shiftKey) {
                         e.preventDefault();
                         handleQuery();
                       }
                     }}
                     placeholder="Ask about the paper..."
-                    className={`w-full p-4 pr-14 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all resize-none ${darkMode
-                      ? 'bg-gray-800 text-gray-200 border-gray-700'
-                      : 'bg-white text-gray-900 border-gray-300'
-                      }`}
+                    className={`w-full p-5 pr-16 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all resize-none text-[15px] leading-relaxed font-normal tracking-tight ${
+                      darkMode
+                        ? "bg-gray-800 text-gray-200 border-gray-700"
+                        : "bg-white text-gray-900 border-gray-300"
+                    }`}
+                    style={{
+                      fontFamily:
+                        '"SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+                    }}
                     rows={3}
                   />
                   <button
                     onClick={() => handleQuery()}
-                    className="absolute right-4 bottom-4 p-3 bg-blue-500 text-white rounded-full hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50 transition-all duration-200"
+                    className="absolute right-4 bottom-4 p-3 bg-blue-500 text-white rounded-full hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50 transition-all duration-200 shadow-md"
                   >
-                    <Send size={20} />
+                    <Send size={14} />
                   </button>
                 </div>
               </div>
             </motion.div>
           )}
-
         </AnimatePresence>
       </div>
     </div>
   );
-  ;
-}
+};
 
 export default ExplorerPage;
