@@ -88,69 +88,55 @@ const AIAssistant: React.FC<AIAssistantProps> = ({
     setIsLoadingAiResponse(true);
 
     try {
-      // const thread = await openai.beta.threads.create({
-      //   messages: [
-      //     {
-      //       role: "user",
-      //       content: userQuery,
-      //       attachments: [
-      //         {
-      //           file_id: pdfFileId,
-      //           tools: [{ type: "file_search" }],
-      //         },
-      //       ],
-      //     },
-      //   ],
-      // });
-      //
       const message = await openai.beta.threads.messages.create(threadId, {
         role: "user",
         content: userQuery,
       });
+      const cleanCitationMarkers = (text: string): string => {
+        // Remove citation markers like 【11:7†source】
+        return text.replace(/【\d+:\d+†[^】]*】/g, "");
+      };
 
-      // const run = await openai.beta.threads.runs.create(threadId, {
-      //   assistant_id: "asst_mWViXAv7irEltBwI5TMiDZ2x",
-      // });
-      //
-      let run = await openai.beta.threads.runs.createAndPoll(threadId, {
-        assistant_id: "asst_mWViXAv7irEltBwI5TMiDZ2x",
-        instructions:
-          "Please address the user as Jane Doe. The user has a premium account.",
-      });
+      const run = openai.beta.threads.runs
+        .stream(threadId, {
+          assistant_id: "asst_mWViXAv7irEltBwI5TMiDZ2x",
+        })
+        .on("textCreated", (text) => console.log(text))
+        .on("textDelta", (text) => {
+          // Clean the text value before using it
+          const cleanedText = text.value
+            ? cleanCitationMarkers(text.value)
+            : "";
 
-      let runStatus;
-      do {
-        runStatus = await openai.beta.threads.runs.retrieve(threadId, run.id);
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-      } while (
-        runStatus.status !== "completed" &&
-        runStatus.status !== "failed"
-      );
+          setIsLoadingAiResponse(false);
 
-      if (runStatus.status === "failed") {
-        throw new Error("Run failed: " + runStatus.last_error?.message);
-      }
+          setAiResponses((prev) => {
+            const lastMessage = prev[prev.length - 1];
 
-      const messages = await openai.beta.threads.messages.list(threadId);
-      const lastMessage = messages.data.find(
-        (message) => message.role === "assistant",
-      );
+            // If there's no previous AI message or the last message isn't from AI,
+            // create a new AI message
+            if (!lastMessage || lastMessage.role !== "ai") {
+              return [...prev, { role: "ai", content: cleanedText }];
+            }
 
-      if (lastMessage) {
-        const processedContent = processMessageContent(lastMessage);
-        setAiResponses((prev) => [
-          ...prev,
-          { role: "ai", content: processedContent },
-        ]);
-      }
+            // Otherwise, append to the existing AI message
+            const updatedMessages = [...prev];
+            updatedMessages[updatedMessages.length - 1] = {
+              ...lastMessage,
+              content: lastMessage.content + cleanedText,
+            };
+
+            return updatedMessages;
+          });
+
+          console.log("text from delta: ", text);
+        });
     } catch (error) {
       console.error("Error:", error);
       setAiResponses((prev) => [
         ...prev,
         { role: "ai", content: "Error: Please retry your query again" },
       ]);
-    } finally {
-      setIsLoadingAiResponse(false);
     }
   };
 
