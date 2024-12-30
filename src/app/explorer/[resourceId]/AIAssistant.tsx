@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Send, BookOpen, User, Bot } from "lucide-react";
 import ReactMarkdown from "react-markdown";
@@ -165,42 +165,72 @@ const AIAssistant: React.FC<AIAssistantProps> = ({
     return processedContent;
   };
 
-  const DynamicLoader: React.FC<{ darkMode: boolean }> = ({ darkMode }) => {
-    const [complexity, setComplexity] = React.useState(0);
-
-    useEffect(() => {
-      const timer = setTimeout(() => {
-        setComplexity((prev) => (prev < 2 ? prev + 1 : prev));
-      }, 5000);
-
-      return () => clearTimeout(timer);
-    }, [complexity]);
+  const SimpleLoader: React.FC<{ darkMode: boolean }> = ({ darkMode }) => {
+    const gradientAnimation = {
+      animation: "gradientShift 3s infinite linear",
+      background: `linear-gradient(135deg, ${
+        darkMode ? "#6b7280" : "#3b82f6"
+      }, ${darkMode ? "#9ca3af" : "#6366f1"})`,
+      backgroundSize: "200% 200%",
+    };
 
     return (
-      <div className="flex items-center space-x-2">
-        <motion.div className="flex items-center space-x-1">
-          {[...Array(3 + complexity)].map((_, index) => (
-            <motion.div
+      <div className="flex items-center space-x-4">
+        <div className="relative flex space-x-2">
+          {[...Array(3)].map((_, index) => (
+            <div
               key={index}
-              initial={{ scale: 0.8, opacity: 0.7 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{
-                repeat: Infinity,
-                repeatType: "reverse",
-                duration: 0.5,
-                delay: index * 0.15,
+              style={{
+                ...gradientAnimation,
+                animationDelay: `${index * 0.2}s`,
+                width: "16px",
+                height: "16px",
+                borderRadius: "50%",
+                animationName: "bounce",
               }}
-              className={`w-1.5 h-1.5 rounded-full ${
-                darkMode ? "bg-gray-400" : "bg-gray-600"
-              }`}
-            />
+              className="animate-bounce"
+            ></div>
           ))}
-        </motion.div>
-        <motion.p className="text-sm">
-          {complexity === 0 && "AI is thinking..."}
-          {complexity === 1 && "Still processing..."}
-          {complexity === 2 && "This might take a moment..."}
-        </motion.p>
+        </div>
+        <div className="flex flex-col">
+          <p
+            className={`text-lg font-semibold ${
+              darkMode ? "text-gray-200" : "text-gray-800"
+            }`}
+          >
+            Thinking...
+          </p>
+          <p
+            className={`text-sm ${
+              darkMode ? "text-gray-400" : "text-gray-500"
+            }`}
+          >
+            The assistant is processing your input.
+          </p>
+        </div>
+        <style>
+          {`
+            @keyframes gradientShift {
+              0% {
+                background-position: 0% 50%;
+              }
+              50% {
+                background-position: 100% 50%;
+              }
+              100% {
+                background-position: 0% 50%;
+              }
+            }
+            @keyframes bounce {
+              0%, 100% {
+                transform: translateY(0);
+              }
+              50% {
+                transform: translateY(-10px);
+              }
+            }
+          `}
+        </style>
       </div>
     );
   };
@@ -208,20 +238,13 @@ const AIAssistant: React.FC<AIAssistantProps> = ({
   const ChatBubble: React.FC<{
     response: Message;
     isLoading?: boolean;
-  }> = ({ response, isLoading }) => {
+  }> = React.memo(({ response, isLoading }) => {
     const isUser = response.role === "user";
 
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-        className={`flex ${isUser ? "justify-end" : "justify-start"} mb-4`}
-      >
+      <div className={`flex ${isUser ? "justify-end" : "justify-start"} mb-4`}>
         <div
-          className={`flex ${
-            isUser ? "flex-row-reverse" : "flex-row"
-          } items-end max-w-[85%]`}
+          className={`flex ${isUser ? "flex-row-reverse" : "flex-row"} items-end max-w-[85%]`}
         >
           <div className={`flex-shrink-0 ${isUser ? "ml-3" : "mr-3"}`}>
             {isUser ? (
@@ -244,7 +267,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({
             }`}
           >
             {isLoading ? (
-              <DynamicLoader darkMode={darkMode} />
+              <SimpleLoader darkMode={darkMode} />
             ) : (
               <ReactMarkdown
                 remarkPlugins={[remarkMath]}
@@ -286,9 +309,11 @@ const AIAssistant: React.FC<AIAssistantProps> = ({
             )}
           </div>
         </div>
-      </motion.div>
+      </div>
     );
-  };
+  });
+
+  ChatBubble.displayName = "ChatBubble";
 
   return (
     <AnimatePresence>
