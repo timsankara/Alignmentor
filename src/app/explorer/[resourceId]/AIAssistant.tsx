@@ -32,6 +32,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({
   const [query, setQuery] = React.useState("");
   const [aiResponses, setAiResponses] = React.useState<Message[]>([]);
   const [isLoadingAiResponse, setIsLoadingAiResponse] = React.useState(false);
+  const [threadId, setThreadId] = React.useState("");
 
   const aiInputRef = useRef<HTMLTextAreaElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
@@ -43,6 +44,41 @@ const AIAssistant: React.FC<AIAssistantProps> = ({
     }
   }, [aiResponses]);
 
+  useEffect(() => {
+    // if (!query.trim()) {
+    //   console.warn("Query is empty. Skipping thread creation.");
+    //   return;
+    // }
+
+    const createThread = async () => {
+      try {
+        // const thread = await openai.beta.threads.create();
+
+        const thread = await openai.beta.threads.create({
+          messages: [
+            {
+              role: "user",
+              content: "Start Here...",
+              attachments: [
+                {
+                  file_id: pdfFileId,
+                  tools: [{ type: "file_search" }],
+                },
+              ],
+            },
+          ],
+        });
+
+        console.log("Thread created: ", thread);
+        setThreadId(thread.id);
+      } catch (error) {
+        console.error("Error creating thread:", error);
+      }
+    };
+
+    createThread();
+  }, []); // Include pdfFileId in the dependency array
+
   const handleQuery = async () => {
     if (!query.trim()) return;
 
@@ -52,28 +88,39 @@ const AIAssistant: React.FC<AIAssistantProps> = ({
     setIsLoadingAiResponse(true);
 
     try {
-      const thread = await openai.beta.threads.create({
-        messages: [
-          {
-            role: "user",
-            content: userQuery,
-            attachments: [
-              {
-                file_id: pdfFileId,
-                tools: [{ type: "file_search" }],
-              },
-            ],
-          },
-        ],
+      // const thread = await openai.beta.threads.create({
+      //   messages: [
+      //     {
+      //       role: "user",
+      //       content: userQuery,
+      //       attachments: [
+      //         {
+      //           file_id: pdfFileId,
+      //           tools: [{ type: "file_search" }],
+      //         },
+      //       ],
+      //     },
+      //   ],
+      // });
+      //
+      const message = await openai.beta.threads.messages.create(threadId, {
+        role: "user",
+        content: userQuery,
       });
 
-      const run = await openai.beta.threads.runs.create(thread.id, {
+      // const run = await openai.beta.threads.runs.create(threadId, {
+      //   assistant_id: "asst_mWViXAv7irEltBwI5TMiDZ2x",
+      // });
+      //
+      let run = await openai.beta.threads.runs.createAndPoll(threadId, {
         assistant_id: "asst_mWViXAv7irEltBwI5TMiDZ2x",
+        instructions:
+          "Please address the user as Jane Doe. The user has a premium account.",
       });
 
       let runStatus;
       do {
-        runStatus = await openai.beta.threads.runs.retrieve(thread.id, run.id);
+        runStatus = await openai.beta.threads.runs.retrieve(threadId, run.id);
         await new Promise((resolve) => setTimeout(resolve, 1000));
       } while (
         runStatus.status !== "completed" &&
@@ -84,7 +131,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({
         throw new Error("Run failed: " + runStatus.last_error?.message);
       }
 
-      const messages = await openai.beta.threads.messages.list(thread.id);
+      const messages = await openai.beta.threads.messages.list(threadId);
       const lastMessage = messages.data.find(
         (message) => message.role === "assistant",
       );
