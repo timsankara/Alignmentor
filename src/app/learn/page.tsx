@@ -7,9 +7,9 @@ import { DynamoDB } from 'aws-sdk';
 
 // Initialize DynamoDB client
 const dynamoDB = new DynamoDB.DocumentClient({
-  region: "us-east-1",
-  accessKeyId: "AKIA55SBB5ENSF3SCWFI",
-  secretAccessKey: "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",
+  accessKeyId: process.env.NEXT_PUBLIC_AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.NEXT_PUBLIC_AWS_SECRET_ACCESS_KEY,
+  region: process.env.NEXT_PUBLIC_AWS_REGION,
 });
 
 type ItemType = 'paper' | 'video' | 'course' | 'tool' | 'community' | 'challenge';

@@ -80,9 +80,9 @@ const ExplorerPage: React.FC<ExplorerPageProps> = ({ params }) => {
   const [pdfFileId, setPdfFileId] = useState("");
 
   const dynamodb = new DynamoDB.DocumentClient({
-    region: "us-east-1",
-    accessKeyId: "AKIA55SBB5ENSF3SCWFI",
-    secretAccessKey: "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",
+    accessKeyId: process.env.NEXT_PUBLIC_AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.NEXT_PUBLIC_AWS_SECRET_ACCESS_KEY,
+    region: process.env.NEXT_PUBLIC_AWS_REGION,
   });
 
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
