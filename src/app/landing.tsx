@@ -266,7 +266,7 @@ const LandingPage: React.FC = () => {
             whileTap={{ scale: 0.95 }}
             href="/api/auth/login"
           >
-            Login To Start Learning
+            Please Login To Start Learning
           </motion.a>
         </motion.div>
         <motion.div

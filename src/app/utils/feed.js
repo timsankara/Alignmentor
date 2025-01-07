@@ -7,6 +7,7 @@ AWS.config.update({
   region: process.env.NEXT_PUBLIC_AWS_REGION,
 });
 
+
 const dynamodb = new AWS.DynamoDB.DocumentClient();
 let tableName = 'AISafetyContent';
 
