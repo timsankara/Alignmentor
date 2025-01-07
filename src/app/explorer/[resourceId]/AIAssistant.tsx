@@ -69,7 +69,6 @@ const AIAssistant: React.FC<AIAssistantProps> = ({
           ],
         });
 
-        console.log("Thread created: ", thread);
         setThreadId(thread.id);
       } catch (error) {
         console.error("Error creating thread:", error);
