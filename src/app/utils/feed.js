@@ -2,9 +2,9 @@ const AWS = require('aws-sdk');
 
 // Configure AWS SDK (make sure you have proper credentials set up)
 AWS.config.update({
-  accessKeyId: "AKIA55SBB5ENSF3SCWFI",
-  secretAccessKey: "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",
-  region: 'us-east-1'
+  accessKeyId: process.env.NEXT_PUBLIC_AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.NEXT_PUBLIC_AWS_SECRET_ACCESS_KEY,
+  region: process.env.NEXT_PUBLIC_AWS_REGION,
 });
 
 const dynamodb = new AWS.DynamoDB.DocumentClient();
